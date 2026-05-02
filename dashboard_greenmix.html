@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard iFood · Greenmix</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+     background:#f1f5f9;color:#1e293b;line-height:1.45;font-size:14px}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,#0d2818 0%,#15532e 55%,#166534 100%);
+     color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(0,0,0,.35)}
+.hdr-in{max-width:1380px;margin:0 auto;padding:13px 24px;
+        display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-logo{background:#fff;color:#15532e;font-weight:900;font-size:12px;
+            padding:5px 11px;border-radius:7px;letter-spacing:1.5px}
+.brand-txt h1{font-size:18px;font-weight:700}
+.brand-txt p{font-size:11px;opacity:.7;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:14px}
+.ifood-pill{background:#ea1d2c;color:#fff;font-weight:800;font-size:12px;
+            padding:5px 14px;border-radius:20px;letter-spacing:.8px}
+.upd{font-size:10px;opacity:.55;text-align:right;line-height:1.5}
+
+/* Tabs wrapper */
+.tabs-bar{background:#fff;border-bottom:2px solid #e2e8f0}
+.tabs-in{max-width:1380px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.tab-btn{padding:13px 22px;font-size:13px;font-weight:600;color:#64748b;background:none;
+         border:none;border-bottom:3px solid transparent;margin-bottom:-2px;
+         cursor:pointer;transition:all .18s;white-space:nowrap}
+.tab-btn:hover{color:#15532e;background:#f0fdf4}
+.tab-btn.active{color:#15532e;border-bottom-color:#15532e}
+
+/* Content */
+.content{max-width:1380px;margin:0 auto;padding:22px 24px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.kpi-card{background:#fff;border-radius:12px;padding:16px;
+          box-shadow:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.04);
+          display:flex;align-items:flex-start;gap:11px}
+.kpi-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;
+           letter-spacing:.9px;margin-bottom:3px}
+.kpi-value{font-size:20px;font-weight:800;line-height:1.1}
+.kpi-sub{font-size:11px;color:#64748b;margin-top:2px}
+.mom-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;
+           border-radius:20px;margin-top:5px}
+
+/* Section title */
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+           color:#94a3b8;margin:0 0 11px 2px}
+
+/* Store grid */
+.store-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.store-card{background:#fff;border-radius:12px;padding:16px;
+            box-shadow:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.04);
+            transition:transform .14s,box-shadow .14s}
+.store-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.store-header{display:flex;justify-content:space-between;align-items:flex-start;
+              gap:8px;margin-bottom:10px}
+.store-name{font-size:13px;font-weight:700;color:#1e293b;line-height:1.3}
+.store-lider{font-size:11px;color:#94a3b8;margin-top:2px}
+.store-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;
+             white-space:nowrap;flex-shrink:0}
+.store-pct{font-size:40px;font-weight:900;line-height:1;letter-spacing:-1px;margin:2px 0 8px}
+.prog-track{background:#e2e8f0;border-radius:6px;height:10px;overflow:hidden;margin-bottom:12px}
+.prog-fill{height:100%;border-radius:6px;transition:width .4s}
+.store-meta{display:flex;flex-direction:column;gap:5px;
+            border-top:1px solid #f1f5f9;padding-top:10px}
+.sm-row{display:flex;justify-content:space-between;align-items:center;
+        font-size:11px;color:#64748b}
+.sm-row strong{font-size:12px}
+.sm-comp{margin-top:2px;padding-top:6px;border-top:1px dashed #e2e8f0}
+.comp-pill{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+            background:#fff;border-radius:10px;padding:10px 16px;
+            margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.filter-label{font-size:11px;font-weight:600;color:#64748b}
+.filter-sep{color:#cbd5e1;font-size:16px;margin:0 2px}
+.fbtn{padding:5px 12px;font-size:11px;font-weight:600;border:1px solid #e2e8f0;
+      border-radius:20px;background:#f8fafc;color:#475569;cursor:pointer;transition:all .14s}
+.fbtn:hover{background:#f0fdf4;border-color:#86efac;color:#15532e}
+.fbtn.active{background:#15532e;border-color:#15532e;color:#fff}
+.fbtn-apply{background:#1e40af;border-color:#1e40af;color:#fff}
+.fbtn-apply:hover{background:#1d4ed8}
+.filter-inp{width:52px;padding:4px 7px;border:1px solid #e2e8f0;border-radius:6px;
+            font-size:12px;text-align:center;outline:none}
+.filter-inp:focus{border-color:#86efac}
+.filter-sel{padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;
+            background:#f8fafc;color:#475569;cursor:pointer;outline:none;max-width:180px}
+.filter-sel:focus{border-color:#86efac}
+
+/* Card */
+.card{background:#fff;border-radius:12px;margin-bottom:18px;
+      box-shadow:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.04);overflow:hidden}
+.card-hdr{display:flex;justify-content:space-between;align-items:center;
+          padding:13px 20px;border-bottom:1px solid #f1f5f9;background:#fafbfc}
+.card-title{font-size:13px;font-weight:700;color:#374151}
+.card-hint{font-size:11px;color:#94a3b8}
+
+/* Table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f8fafc;padding:9px 12px;font-size:10px;font-weight:700;
+   text-transform:uppercase;letter-spacing:.7px;color:#64748b;
+   border-bottom:1px solid #e9ecef;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tbody tr:hover td{background:#f8fffe}
+.tn{font-weight:600;color:#1e293b}
+.tr{text-align:right}
+.b{font-weight:700}
+.pb-tr{flex:1;background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden;min-width:70px}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.tot td{background:#f0fdf4!important;font-weight:800;border-top:2px solid #bbf7d0}
+
+/* Footer */
+.footer{text-align:center;color:#94a3b8;font-size:11px;padding:20px;margin-top:4px}
+
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.store-grid{grid-template-columns:repeat(2,1fr)};.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.store-grid{grid-template-columns:1fr};.kpi-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-in">
+    <div class="brand">
+      <div class="brand-logo">GREENMIX</div>
+      <div class="brand-txt"><h1>Dashboard iFood</h1><p>Acompanhamento de Metas por Unidade</p></div>
+    </div>
+    <div class="hdr-right">
+      <div class="upd">Atualizado em 01/05/2026 às 23:54<br><span>AcompanhamentoMetaIFOOD.xlsx</span></div>
+      <div class="ifood-pill">iFood</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-bar">
+  <div class="tabs-in">
+    <button class="tab-btn active" onclick="showTab('abr',this)">📅 Abril 2026</button>
+    <button class="tab-btn" onclick="showTab('mar',this)">📅 Março 2026</button>
+  </div>
+</div>
+
+<div class="content">
+  
+  <div id="abr" class="tab-pane">
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-left:4px solid #d97706">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Faturamento Total</div>
+          <div class="kpi-value" style="color:#d97706">R$ 1.507.256</div>
+          <div class="kpi-sub">Meta: R$ 1.642.129</div>
+          <div class="mom-badge" style="background:#dcfce7;color:#16a34a">▲ +1.0% vs Mar/26</div>
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #d97706">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-body">
+          <div class="kpi-label">% da Meta</div>
+          <div class="kpi-value" style="color:#d97706">91.8%</div>
+          <div class="kpi-sub">Atenção</div>
+          <div class="mom-badge" style="background:#dcfce7;color:#16a34a">▲ +11.5pp vs Mar/26</div>
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #dc2626">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-body">
+          <div class="kpi-label">GAP Faturamento</div>
+          <div class="kpi-value" style="color:#dc2626">-R$ 134.873</div>
+          <div class="kpi-sub">Abaixo da meta</div>
+          <div class="mom-badge" style="background:#dcfce7;color:#16a34a">▲ +63.1% vs Mar/26</div>
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #dc2626">
+        <div class="kpi-icon">🛵</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Pedidos</div>
+          <div class="kpi-value" style="color:#dc2626">15,504</div>
+          <div class="kpi-sub">76.8% · Meta: 20,193</div>
+          <div class="mom-badge" style="background:#fee2e2;color:#dc2626">▼ -12.8% vs Mar/26</div>
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #1e40af">
+        <div class="kpi-icon">🎫</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Ticket Médio</div>
+          <div class="kpi-value" style="color:#1e40af">R$ 114,23</div>
+          <div class="kpi-sub">Meta: R$ 90,27</div>
+          <div class="mom-badge" style="background:#dcfce7;color:#16a34a">▲ +13.4% vs Mar/26</div>
+        </div>
+      </div></div>
+
+    <!-- Store cards -->
+    <div class="sec-title">Performance por Unidade — Faturamento</div>
+    <div class="store-grid">
+      <div class="store-card" style="border-top:4px solid #d97706">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Rio Mar Restaurante</div>
+            <div class='store-lider'>Arthur</div>
+          </div>
+          <span class="store-badge" style="background:#fef3c7;color:#d97706">Atenção</span>
+        </div>
+        <div class="store-pct" style="color:#d97706">94.1%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:94.1%;background:#d97706"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#d97706">R$ 621.311</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 660.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 38.689</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#fee2e2;color:#dc2626">▼ -16.5%</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #d97706">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Rio Mar Mercado</div>
+            <div class='store-lider'>Cleverton</div>
+          </div>
+          <span class="store-badge" style="background:#fef3c7;color:#d97706">Atenção</span>
+        </div>
+        <div class="store-pct" style="color:#d97706">81.0%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:81.0%;background:#d97706"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#d97706">R$ 194.442</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 240.034</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 45.592</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#fee2e2;color:#dc2626">▼ -7.3%</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #16a34a">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Paiva</div>
+            <div class='store-lider'>Gleibson</div>
+          </div>
+          <span class="store-badge" style="background:#dcfce7;color:#16a34a">No alvo</span>
+        </div>
+        <div class="store-pct" style="color:#16a34a">97.5%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:97.5%;background:#16a34a"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#16a34a">R$ 292.791</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 300.195</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 7.404</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#dcfce7;color:#16a34a">▲ +13.3%</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #16a34a">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Delivery</div>
+            <div class='store-lider'>Aline</div>
+          </div>
+          <span class="store-badge" style="background:#dcfce7;color:#16a34a">No alvo</span>
+        </div>
+        <div class="store-pct" style="color:#16a34a">144.3%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:100.0%;background:#16a34a"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#16a34a">R$ 227.230</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 157.500</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#16a34a;font-weight:600">+R$ 69.730</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#dcfce7;color:#16a34a">▲ +333.4%</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #dc2626">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Cabanga</div>
+            <div class='store-lider'>Cleverton</div>
+          </div>
+          <span class="store-badge" style="background:#fee2e2;color:#dc2626">Crítico</span>
+        </div>
+        <div class="store-pct" style="color:#dc2626">45.8%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:45.8%;background:#dc2626"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#dc2626">R$ 34.352</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 75.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 40.648</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#fee2e2;color:#dc2626">▼ -40.2%</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #dc2626">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Velocity</div>
+            <div class='store-lider'>Cleverton</div>
+          </div>
+          <span class="store-badge" style="background:#fee2e2;color:#dc2626">Crítico</span>
+        </div>
+        <div class="store-pct" style="color:#dc2626">65.8%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:65.8%;background:#dc2626"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#dc2626">R$ 49.354</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 75.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 25.646</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#fee2e2;color:#dc2626">▼ -23.0%</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #d97706">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Lagoa Azul</div>
+            <div class='store-lider'>Cleverton</div>
+          </div>
+          <span class="store-badge" style="background:#fef3c7;color:#d97706">Atenção</span>
+        </div>
+        <div class="store-pct" style="color:#d97706">82.6%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:82.6%;background:#d97706"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#d97706">R$ 61.945</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 75.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 13.055</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#fee2e2;color:#dc2626">▼ -26.0%</span>
+          </div>
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #dc2626">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Maison</div>
+            <div class='store-lider'>Duda</div>
+          </div>
+          <span class="store-badge" style="background:#fee2e2;color:#dc2626">Crítico</span>
+        </div>
+        <div class="store-pct" style="color:#dc2626">43.5%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:43.5%;background:#dc2626"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#dc2626">R$ 25.830</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 59.400</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 33.570</span></div>
+          
+          <div class="sm-row sm-comp">
+            <span>vs mês anterior</span>
+            <span class="comp-pill" style="background:#dcfce7;color:#16a34a">▲ +16.9%</span>
+          </div>
+        </div>
+      </div></div>
+
+    <!-- Filtro de período -->
+    <div class="filter-bar" id="filter_abr">
+      <span class="filter-label">📅 Período:</span>
+      <button class="fbtn active" onclick="filtrar('abr',1,7,this)">Sem. 1</button>
+      <button class="fbtn" onclick="filtrar('abr',8,14,this)">Sem. 2</button>
+      <button class="fbtn" onclick="filtrar('abr',15,21,this)">Sem. 3</button>
+      <button class="fbtn" onclick="filtrar('abr',22,30,this)">Sem. 4+</button>
+      <button class="fbtn" onclick="filtrar('abr',1,30,this)">Todo o mês</button>
+      <span class="filter-sep">|</span>
+      <span class="filter-label">De:</span>
+      <input class="filter-inp" id="from_abr" type="number" min="1" max="30" value="1">
+      <span class="filter-label">Até:</span>
+      <input class="filter-inp" id="to_abr" type="number" min="1" max="30" value="30">
+      <button class="fbtn fbtn-apply" onclick="aplicarFiltro('abr')">Aplicar</button>
+      <span class="filter-sep">|</span>
+      <span class="filter-label">🏪 Unidade:</span>
+      <select id="loja_abr" class="filter-sel" onchange="selecionarLoja('abr')"><option value="-1">Todas as unidades</option><option value="0">Rio Mar Restaurante</option><option value="1">Rio Mar Mercado</option><option value="2">Paiva</option><option value="3">Delivery</option><option value="4">Cabanga</option><option value="5">Velocity</option><option value="6">Lagoa Azul</option><option value="7">Maison</option></select>
+    </div>
+
+    <!-- Gráfico diário -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📊 Faturamento Diário vs Meta Diária</span>
+        <span class="card-hint">🟢 Acima da meta &nbsp; 🔴 Abaixo da meta</span>
+      </div>
+      <div style="padding:16px 20px 20px">
+        <canvas id="cd_abr" height="240"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico acumulado -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📈 Faturamento Acumulado vs Meta Acumulada</span>
+      </div>
+      <div style="padding:16px 20px 20px">
+        <canvas id="ca_abr" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabelas -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">💰 Faturamento Detalhado</span>
+        <span class="badge" style="background:#fef3c7;color:#d97706">91.8% atingido</span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Unidade</th><th>Líder</th><th class="tr">Meta</th><th class="tr">Realizado</th><th class="tr">GAP</th><th>Progresso</th><th>Status</th></tr></thead>
+        <tbody><tr>
+          <td class="tn">Rio Mar Restaurante</td>
+          <td class="tn" style="color:#64748b">Arthur</td>
+          <td class="tr">R$ 660.000</td>
+          <td class="tr b">R$ 621.311</td>
+          <td class="tr" style="color:#dc2626">-R$ 38.689</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:94%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">94.1%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Rio Mar Mercado</td>
+          <td class="tn" style="color:#64748b">Cleverton</td>
+          <td class="tr">R$ 240.034</td>
+          <td class="tr b">R$ 194.442</td>
+          <td class="tr" style="color:#dc2626">-R$ 45.592</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:81%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">81.0%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Paiva</td>
+          <td class="tn" style="color:#64748b">Gleibson</td>
+          <td class="tr">R$ 300.195</td>
+          <td class="tr b">R$ 292.791</td>
+          <td class="tr" style="color:#dc2626">-R$ 7.404</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:98%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">97.5%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Delivery</td>
+          <td class="tn" style="color:#64748b">Aline</td>
+          <td class="tr">R$ 157.500</td>
+          <td class="tr b">R$ 227.230</td>
+          <td class="tr" style="color:#16a34a">+R$ 69.730</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">144.3%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Cabanga</td>
+          <td class="tn" style="color:#64748b">Cleverton</td>
+          <td class="tr">R$ 75.000</td>
+          <td class="tr b">R$ 34.352</td>
+          <td class="tr" style="color:#dc2626">-R$ 40.648</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:46%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">45.8%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Velocity</td>
+          <td class="tn" style="color:#64748b">Cleverton</td>
+          <td class="tr">R$ 75.000</td>
+          <td class="tr b">R$ 49.354</td>
+          <td class="tr" style="color:#dc2626">-R$ 25.646</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:66%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">65.8%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Lagoa Azul</td>
+          <td class="tn" style="color:#64748b">Cleverton</td>
+          <td class="tr">R$ 75.000</td>
+          <td class="tr b">R$ 61.945</td>
+          <td class="tr" style="color:#dc2626">-R$ 13.055</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:83%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">82.6%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Maison</td>
+          <td class="tn" style="color:#64748b">Duda</td>
+          <td class="tr">R$ 59.400</td>
+          <td class="tr b">R$ 25.830</td>
+          <td class="tr" style="color:#dc2626">-R$ 33.570</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:43%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">43.5%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr class="tot">
+          <td class="tn" colspan="2">TOTAL</td>
+          <td class="tr">R$ 1.642.129</td><td class="tr b">R$ 1.507.256</td>
+          <td class="tr" style="color:#dc2626">-R$ 134.873</td>
+          <td colspan="2" style="padding:8px 12px;color:#d97706;font-weight:700">91.8% atingido</td>
+        </tr></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">🛵 Pedidos</span>
+        <span class="badge" style="background:#fee2e2;color:#dc2626">76.8% atingido</span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Unidade</th><th class="tr">Meta</th><th class="tr">Realizado</th><th class="tr">GAP</th><th>Progresso</th><th>Status</th></tr></thead>
+        <tbody><tr>
+          <td class="tn">Rio Mar Restaurante</td>
+          <td class="tr">6,000</td><td class="tr b">5,089</td>
+          <td class="tr" style="color:#dc2626">-911</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:85%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">84.8%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Rio Mar Mercado</td>
+          <td class="tr">3,429</td><td class="tr b">2,246</td>
+          <td class="tr" style="color:#dc2626">-1,183</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:65%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">65.5%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Paiva</td>
+          <td class="tr">2,144</td><td class="tr b">1,806</td>
+          <td class="tr" style="color:#dc2626">-338</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:84%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">84.2%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Delivery</td>
+          <td class="tr">2,250</td><td class="tr b">2,124</td>
+          <td class="tr" style="color:#dc2626">-126</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:94%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">94.4%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Cabanga</td>
+          <td class="tr">1,500</td><td class="tr b">727</td>
+          <td class="tr" style="color:#dc2626">-773</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:48%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">48.5%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Velocity</td>
+          <td class="tr">2,500</td><td class="tr b">1,051</td>
+          <td class="tr" style="color:#dc2626">-1,449</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:42%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">42.0%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Lagoa Azul</td>
+          <td class="tr">1,875</td><td class="tr b">2,120</td>
+          <td class="tr" style="color:#16a34a">+245</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">113.1%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Maison</td>
+          <td class="tr">495</td><td class="tr b">341</td>
+          <td class="tr" style="color:#dc2626">-154</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:69%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">68.9%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr class="tot">
+          <td class="tn">TOTAL</td>
+          <td class="tr">20,193</td><td class="tr b">15,504</td>
+          <td class="tr" style="color:#dc2626">-4,689</td>
+          <td colspan="2" style="padding:8px 12px;color:#dc2626;font-weight:700">76.8% atingido</td>
+        </tr></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">🎫 Ticket Médio</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Unidade</th><th class="tr">Meta</th><th class="tr">Realizado</th><th class="tr">GAP</th></tr></thead>
+        <tbody><tr>
+          <td class="tn">Rio Mar Restaurante</td>
+          <td class="tr">R$ 100,00</td><td class="tr b">R$ 122,09</td>
+          <td class="tr" style="color:#16a34a">+R$ 22,09</td>
+        </tr><tr>
+          <td class="tn">Rio Mar Mercado</td>
+          <td class="tr">R$ 70,00</td><td class="tr b">R$ 86,57</td>
+          <td class="tr" style="color:#16a34a">+R$ 16,57</td>
+        </tr><tr>
+          <td class="tn">Paiva</td>
+          <td class="tr">R$ 120,00</td><td class="tr b">R$ 162,12</td>
+          <td class="tr" style="color:#16a34a">+R$ 42,12</td>
+        </tr><tr>
+          <td class="tn">Delivery</td>
+          <td class="tr">R$ 70,00</td><td class="tr b">R$ 106,98</td>
+          <td class="tr" style="color:#16a34a">+R$ 36,98</td>
+        </tr><tr>
+          <td class="tn">Cabanga</td>
+          <td class="tr">R$ 50,00</td><td class="tr b">R$ 47,25</td>
+          <td class="tr" style="color:#dc2626">-R$ 2,75</td>
+        </tr><tr>
+          <td class="tn">Velocity</td>
+          <td class="tr">R$ 50,00</td><td class="tr b">R$ 46,96</td>
+          <td class="tr" style="color:#dc2626">-R$ 3,04</td>
+        </tr><tr>
+          <td class="tn">Lagoa Azul</td>
+          <td class="tr">R$ 50,00</td><td class="tr b">R$ 29,22</td>
+          <td class="tr" style="color:#dc2626">-R$ 20,78</td>
+        </tr><tr>
+          <td class="tn">Maison</td>
+          <td class="tr">R$ 120,00</td><td class="tr b">R$ 75,75</td>
+          <td class="tr" style="color:#dc2626">-R$ 44,25</td>
+        </tr><tr class="tot">
+          <td class="tn">TOTAL</td>
+          <td class="tr">R$ 90,27</td><td class="tr b">R$ 114,23</td>
+          <td class="tr" style="color:#16a34a">+R$ 23,96</td>
+        </tr></tbody>
+      </table></div>
+    </div>
+
+  </div>
+  
+  <div id="mar" class="tab-pane">
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card" style="border-left:4px solid #d97706">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Faturamento Total</div>
+          <div class="kpi-value" style="color:#d97706">R$ 1.492.283</div>
+          <div class="kpi-sub">Meta: R$ 1.857.782</div>
+          
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #d97706">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-body">
+          <div class="kpi-label">% da Meta</div>
+          <div class="kpi-value" style="color:#d97706">80.3%</div>
+          <div class="kpi-sub">Atenção</div>
+          
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #dc2626">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-body">
+          <div class="kpi-label">GAP Faturamento</div>
+          <div class="kpi-value" style="color:#dc2626">-R$ 365.499</div>
+          <div class="kpi-sub">Abaixo da meta</div>
+          
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #d97706">
+        <div class="kpi-icon">🛵</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Pedidos</div>
+          <div class="kpi-value" style="color:#d97706">17,776</div>
+          <div class="kpi-sub">85.9% · Meta: 20,690</div>
+          
+        </div>
+      </div>
+      <div class="kpi-card" style="border-left:4px solid #1e40af">
+        <div class="kpi-icon">🎫</div>
+        <div class="kpi-body">
+          <div class="kpi-label">Ticket Médio</div>
+          <div class="kpi-value" style="color:#1e40af">R$ 100,73</div>
+          <div class="kpi-sub">Meta: R$ 95,51</div>
+          
+        </div>
+      </div></div>
+
+    <!-- Store cards -->
+    <div class="sec-title">Performance por Unidade — Faturamento</div>
+    <div class="store-grid">
+      <div class="store-card" style="border-top:4px solid #d97706">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Rio Mar Restaurante</div>
+            
+          </div>
+          <span class="store-badge" style="background:#fef3c7;color:#d97706">Atenção</span>
+        </div>
+        <div class="store-pct" style="color:#d97706">82.7%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:82.7%;background:#d97706"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#d97706">R$ 744.324</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 900.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 155.676</span></div>
+          
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #d97706">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Rio Mar Mercado</div>
+            
+          </div>
+          <span class="store-badge" style="background:#fef3c7;color:#d97706">Atenção</span>
+        </div>
+        <div class="store-pct" style="color:#d97706">93.2%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:93.2%;background:#d97706"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#d97706">R$ 209.740</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 225.032</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 15.292</span></div>
+          
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #dc2626">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Paiva</div>
+            
+          </div>
+          <span class="store-badge" style="background:#fee2e2;color:#dc2626">Crítico</span>
+        </div>
+        <div class="store-pct" style="color:#dc2626">68.4%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:68.4%;background:#dc2626"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#dc2626">R$ 258.368</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 378.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 119.632</span></div>
+          
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #dc2626">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Delivery</div>
+            
+          </div>
+          <span class="store-badge" style="background:#fee2e2;color:#dc2626">Crítico</span>
+        </div>
+        <div class="store-pct" style="color:#dc2626">35.0%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:35.0%;background:#dc2626"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#dc2626">R$ 52.430</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 150.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 97.570</span></div>
+          
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #16a34a">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Cabanga</div>
+            
+          </div>
+          <span class="store-badge" style="background:#dcfce7;color:#16a34a">No alvo</span>
+        </div>
+        <div class="store-pct" style="color:#16a34a">102.2%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:100.0%;background:#16a34a"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#16a34a">R$ 57.477</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 56.250</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#16a34a;font-weight:600">+R$ 1.227</span></div>
+          
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #16a34a">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Velocity</div>
+            
+          </div>
+          <span class="store-badge" style="background:#dcfce7;color:#16a34a">No alvo</span>
+        </div>
+        <div class="store-pct" style="color:#16a34a">122.1%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:100.0%;background:#16a34a"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#16a34a">R$ 64.099</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 52.500</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#16a34a;font-weight:600">+R$ 11.599</span></div>
+          
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #16a34a">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Lagoa Azul</div>
+            
+          </div>
+          <span class="store-badge" style="background:#dcfce7;color:#16a34a">No alvo</span>
+        </div>
+        <div class="store-pct" style="color:#16a34a">139.6%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:100.0%;background:#16a34a"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#16a34a">R$ 83.755</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 60.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#16a34a;font-weight:600">+R$ 23.755</span></div>
+          
+        </div>
+      </div>
+      <div class="store-card" style="border-top:4px solid #dc2626">
+        <div class="store-header">
+          <div>
+            <div class="store-name">Maison</div>
+            
+          </div>
+          <span class="store-badge" style="background:#fee2e2;color:#dc2626">Crítico</span>
+        </div>
+        <div class="store-pct" style="color:#dc2626">61.4%</div>
+        <div class="prog-track"><div class="prog-fill" style="width:61.4%;background:#dc2626"></div></div>
+        <div class="store-meta">
+          <div class="sm-row"><span>Realizado</span><strong style="color:#dc2626">R$ 22.091</strong></div>
+          <div class="sm-row"><span>Meta</span><span>R$ 36.000</span></div>
+          <div class="sm-row"><span>GAP</span><span style="color:#dc2626;font-weight:600">-R$ 13.909</span></div>
+          
+        </div>
+      </div></div>
+
+    <!-- Filtro de período -->
+    <div class="filter-bar" id="filter_mar">
+      <span class="filter-label">📅 Período:</span>
+      <button class="fbtn active" onclick="filtrar('mar',1,7,this)">Sem. 1</button>
+      <button class="fbtn" onclick="filtrar('mar',8,14,this)">Sem. 2</button>
+      <button class="fbtn" onclick="filtrar('mar',15,21,this)">Sem. 3</button>
+      <button class="fbtn" onclick="filtrar('mar',22,31,this)">Sem. 4+</button>
+      <button class="fbtn" onclick="filtrar('mar',1,31,this)">Todo o mês</button>
+      <span class="filter-sep">|</span>
+      <span class="filter-label">De:</span>
+      <input class="filter-inp" id="from_mar" type="number" min="1" max="31" value="1">
+      <span class="filter-label">Até:</span>
+      <input class="filter-inp" id="to_mar" type="number" min="1" max="31" value="31">
+      <button class="fbtn fbtn-apply" onclick="aplicarFiltro('mar')">Aplicar</button>
+      <span class="filter-sep">|</span>
+      <span class="filter-label">🏪 Unidade:</span>
+      <select id="loja_mar" class="filter-sel" onchange="selecionarLoja('mar')"><option value="-1">Todas as unidades</option><option value="0">Rio Mar Restaurante</option><option value="1">Rio Mar Mercado</option><option value="2">Paiva</option><option value="3">Delivery</option><option value="4">Cabanga</option><option value="5">Velocity</option><option value="6">Lagoa Azul</option><option value="7">Maison</option></select>
+    </div>
+
+    <!-- Gráfico diário -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📊 Faturamento Diário vs Meta Diária</span>
+        <span class="card-hint">🟢 Acima da meta &nbsp; 🔴 Abaixo da meta</span>
+      </div>
+      <div style="padding:16px 20px 20px">
+        <canvas id="cd_mar" height="240"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico acumulado -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📈 Faturamento Acumulado vs Meta Acumulada</span>
+      </div>
+      <div style="padding:16px 20px 20px">
+        <canvas id="ca_mar" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabelas -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">💰 Faturamento Detalhado</span>
+        <span class="badge" style="background:#fef3c7;color:#d97706">80.3% atingido</span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Unidade</th><th>Líder</th><th class="tr">Meta</th><th class="tr">Realizado</th><th class="tr">GAP</th><th>Progresso</th><th>Status</th></tr></thead>
+        <tbody><tr>
+          <td class="tn">Rio Mar Restaurante</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 900.000</td>
+          <td class="tr b">R$ 744.324</td>
+          <td class="tr" style="color:#dc2626">-R$ 155.676</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:83%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">82.7%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Rio Mar Mercado</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 225.032</td>
+          <td class="tr b">R$ 209.740</td>
+          <td class="tr" style="color:#dc2626">-R$ 15.292</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:93%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">93.2%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Paiva</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 378.000</td>
+          <td class="tr b">R$ 258.368</td>
+          <td class="tr" style="color:#dc2626">-R$ 119.632</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:68%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">68.4%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Delivery</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 150.000</td>
+          <td class="tr b">R$ 52.430</td>
+          <td class="tr" style="color:#dc2626">-R$ 97.570</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:35%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">35.0%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Cabanga</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 56.250</td>
+          <td class="tr b">R$ 57.477</td>
+          <td class="tr" style="color:#16a34a">+R$ 1.227</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">102.2%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Velocity</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 52.500</td>
+          <td class="tr b">R$ 64.099</td>
+          <td class="tr" style="color:#16a34a">+R$ 11.599</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">122.1%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Lagoa Azul</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 60.000</td>
+          <td class="tr b">R$ 83.755</td>
+          <td class="tr" style="color:#16a34a">+R$ 23.755</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">139.6%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Maison</td>
+          <td class="tn" style="color:#64748b"></td>
+          <td class="tr">R$ 36.000</td>
+          <td class="tr b">R$ 22.091</td>
+          <td class="tr" style="color:#dc2626">-R$ 13.909</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:61%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">61.4%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr class="tot">
+          <td class="tn" colspan="2">TOTAL</td>
+          <td class="tr">R$ 1.857.782</td><td class="tr b">R$ 1.492.283</td>
+          <td class="tr" style="color:#dc2626">-R$ 365.499</td>
+          <td colspan="2" style="padding:8px 12px;color:#d97706;font-weight:700">80.3% atingido</td>
+        </tr></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">🛵 Pedidos</span>
+        <span class="badge" style="background:#fef3c7;color:#d97706">85.9% atingido</span>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Unidade</th><th class="tr">Meta</th><th class="tr">Realizado</th><th class="tr">GAP</th><th>Progresso</th><th>Status</th></tr></thead>
+        <tbody><tr>
+          <td class="tn">Rio Mar Restaurante</td>
+          <td class="tr">9,000</td><td class="tr b">6,724</td>
+          <td class="tr" style="color:#dc2626">-2,276</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:75%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">74.7%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Rio Mar Mercado</td>
+          <td class="tr">3,215</td><td class="tr b">2,888</td>
+          <td class="tr" style="color:#dc2626">-327</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:90%;background:#d97706;height:100%;border-radius:4px"></div></div>
+              <span style="color:#d97706;font-weight:700;min-width:42px;text-align:right">89.8%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fef3c7;color:#d97706">Atenção</span></td>
+        </tr><tr>
+          <td class="tn">Paiva</td>
+          <td class="tr">3,150</td><td class="tr b">1,730</td>
+          <td class="tr" style="color:#dc2626">-1,420</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:55%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">54.9%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Delivery</td>
+          <td class="tr">1,500</td><td class="tr b">590</td>
+          <td class="tr" style="color:#dc2626">-910</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:39%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">39.3%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr>
+          <td class="tn">Cabanga</td>
+          <td class="tr">1,125</td><td class="tr b">1,252</td>
+          <td class="tr" style="color:#16a34a">+127</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">111.3%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Velocity</td>
+          <td class="tr">1,050</td><td class="tr b">1,432</td>
+          <td class="tr" style="color:#16a34a">+382</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">136.4%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Lagoa Azul</td>
+          <td class="tr">1,200</td><td class="tr b">2,840</td>
+          <td class="tr" style="color:#16a34a">+1,640</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:100%;background:#16a34a;height:100%;border-radius:4px"></div></div>
+              <span style="color:#16a34a;font-weight:700;min-width:42px;text-align:right">236.7%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#dcfce7;color:#16a34a">No alvo</span></td>
+        </tr><tr>
+          <td class="tn">Maison</td>
+          <td class="tr">450</td><td class="tr b">320</td>
+          <td class="tr" style="color:#dc2626">-130</td>
+          <td style="padding:8px 12px;min-width:150px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pb-tr"><div style="width:71%;background:#dc2626;height:100%;border-radius:4px"></div></div>
+              <span style="color:#dc2626;font-weight:700;min-width:42px;text-align:right">71.1%</span>
+            </div>
+          </td>
+          <td><span class="badge" style="background:#fee2e2;color:#dc2626">Crítico</span></td>
+        </tr><tr class="tot">
+          <td class="tn">TOTAL</td>
+          <td class="tr">20,690</td><td class="tr b">17,776</td>
+          <td class="tr" style="color:#dc2626">-2,914</td>
+          <td colspan="2" style="padding:8px 12px;color:#d97706;font-weight:700">85.9% atingido</td>
+        </tr></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">🎫 Ticket Médio</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Unidade</th><th class="tr">Meta</th><th class="tr">Realizado</th><th class="tr">GAP</th></tr></thead>
+        <tbody><tr>
+          <td class="tn">Rio Mar Restaurante</td>
+          <td class="tr">R$ 100,00</td><td class="tr b">R$ 110,70</td>
+          <td class="tr" style="color:#16a34a">+R$ 10,70</td>
+        </tr><tr>
+          <td class="tn">Rio Mar Mercado</td>
+          <td class="tr">R$ 70,00</td><td class="tr b">R$ 72,62</td>
+          <td class="tr" style="color:#16a34a">+R$ 2,62</td>
+        </tr><tr>
+          <td class="tn">Paiva</td>
+          <td class="tr">R$ 120,00</td><td class="tr b">R$ 149,00</td>
+          <td class="tr" style="color:#16a34a">+R$ 29,00</td>
+        </tr><tr>
+          <td class="tn">Delivery</td>
+          <td class="tr">R$ 100,00</td><td class="tr b">R$ 90,00</td>
+          <td class="tr" style="color:#dc2626">-R$ 10,00</td>
+        </tr><tr>
+          <td class="tn">Cabanga</td>
+          <td class="tr">R$ 50,00</td><td class="tr b">R$ 46,00</td>
+          <td class="tr" style="color:#dc2626">-R$ 4,00</td>
+        </tr><tr>
+          <td class="tn">Velocity</td>
+          <td class="tr">R$ 50,00</td><td class="tr b">R$ 45,00</td>
+          <td class="tr" style="color:#dc2626">-R$ 5,00</td>
+        </tr><tr>
+          <td class="tn">Lagoa Azul</td>
+          <td class="tr">R$ 50,00</td><td class="tr b">R$ 29,00</td>
+          <td class="tr" style="color:#dc2626">-R$ 21,00</td>
+        </tr><tr>
+          <td class="tn">Maison</td>
+          <td class="tr">R$ 80,00</td><td class="tr b">R$ 69,03</td>
+          <td class="tr" style="color:#dc2626">-R$ 10,97</td>
+        </tr><tr class="tot">
+          <td class="tn">TOTAL</td>
+          <td class="tr">R$ 95,51</td><td class="tr b">R$ 100,73</td>
+          <td class="tr" style="color:#16a34a">+R$ 5,23</td>
+        </tr></tbody>
+      </table></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">Dashboard gerado automaticamente · Greenmix iFood · 01/05/2026 às 23:54</div>
+
+<script>
+window.CD = {};
+window.CH = {};
+
+  window.CD['abr'] = {
+    dias: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30"],
+    fat: [46249.24, 59336.38, 41431.94, 45542.36, 29935.73, 31504.56, 37869.3, 54374.5, 46112.08, 54206.82, 65495.55, 44154.47, 39057.03, 32462.55, 47696.15, 47903.18, 51289.56, 59149.02, 54466.35, 51938.74, 64534.43, 45513.5, 65154.19, 57833.1, 68010.37, 63420.68, 37778.35, 47073.07, 53668.63, 64093.81],
+    meta: [54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63, 54737.63],
+    acum: [46249.24, 105585.62, 147017.56, 192559.92, 222495.65, 254000.21, 291869.51, 346244.01, 392356.09, 446562.91, 512058.46, 556212.93, 595269.96, 627732.51, 675428.66, 723331.84, 774621.4, 833770.42, 888236.77, 940175.51, 1004709.94, 1050223.44, 1115377.63, 1173210.73, 1241221.1, 1304641.78, 1342420.13, 1389493.2, 1443161.83, 1507255.64],
+    metaAcum: [54737.63, 109475.26, 164212.9, 218950.53, 273688.16, 328425.79, 383163.42, 437901.06, 492638.69, 547376.32, 602113.95, 656851.58, 711589.22, 766326.85, 821064.48, 875802.11, 930539.75, 985277.38, 1040015.01, 1094752.64, 1149490.27, 1204227.91, 1258965.54, 1313703.17, 1368440.8, 1423178.43, 1477916.07, 1532653.7, 1587391.33, 1642128.96],
+    cores: ["#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a"],
+    metaDiaria: 54737.63,
+    n: 30,
+    lojas: [{"nome": "Rio Mar Restaurante", "fat": [24941.76, 22589.04, 12247.25, 16542.61, 10429.57, 17627.03, 17414.54, 20132.27, 23363.98, 23120.55, 27086.8, 20761.85, 21339.86, 11268.29, 22148.3, 22825.09, 21482.95, 20951.99, 18878.68, 22427.21, 20862.75, 21892.45, 20354.6, 25109.32, 26231.64, 20828.07, 15892.58, 19205.96, 26236.33, 27117.37], "meta_d": 22000.0, "cores": ["#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a"]}, {"nome": "Rio Mar Mercado", "fat": [6735.85, 8088.28, 4706.05, 5161.06, 3735.42, 4325.77, 5390.53, 5985.32, 6328.57, 7838.24, 7354.75, 5252.97, 5630.64, 3047.32, 9458.6, 8280.31, 8604.7, 10224.6, 4845.28, 5558.26, 5435.49, 4354.14, 7653.83, 7943.01, 6764.65, 9030.35, 5396.67, 6691.46, 7549.82, 7070.21], "meta_d": 8001.13, "cores": ["#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626"]}, {"nome": "Paiva", "fat": [5331.94, 11550.55, 17715.49, 18550.48, 9044.41, 0.0, 7140.01, 3595.22, 5899.78, 10569.98, 16440.48, 7950.44, 0.0, 3955.29, 4132.01, 5207.45, 8576.51, 16063.18, 19437.95, 11907.88, 23582.2, 7576.42, 6699.74, 11584.51, 19737.52, 17809.2, 0.0, 7661.37, 5845.57, 9225.9], "meta_d": 10006.5, "cores": ["#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626"]}, {"nome": "Delivery", "fat": [2525.51, 11503.37, 3903.69, 2800.03, 4554.73, 4640.86, 3759.31, 17766.1, 3065.3, 5618.0, 7730.81, 6963.99, 8033.34, 6564.29, 5410.48, 4918.36, 5821.0, 7181.86, 8118.95, 6817.44, 9921.59, 6685.67, 21174.48, 6893.31, 8016.41, 11431.51, 8865.96, 6324.6, 7368.11, 12851.3], "meta_d": 5250.0, "cores": ["#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a"]}, {"nome": "Cabanga", "fat": [1106.87, 804.79, 210.6, 473.85, 158.88, 832.49, 101.28, 1342.06, 1309.44, 1800.34, 3089.33, 568.13, 1324.74, 1231.24, 1059.68, 832.44, 1556.22, 1402.02, 1286.94, 1501.49, 1775.55, 926.45, 969.74, 986.01, 2160.07, 1847.37, 1025.4, 649.87, 999.53, 1018.93], "meta_d": 2500.0, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626"]}, {"nome": "Velocity", "fat": [1033.05, 1786.32, 1912.9, 1089.3, 907.54, 1860.49, 1515.56, 1833.34, 1951.18, 1855.16, 1201.74, 963.7, 1600.07, 2543.0, 1934.18, 1883.13, 1884.05, 1036.65, 1069.6, 1103.92, 1116.38, 1273.6, 1983.07, 2646.98, 1158.3, 1037.47, 3734.25, 1790.6, 1625.74, 2023.06], "meta_d": 2500.0, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626"]}, {"nome": "Lagoa Azul", "fat": [2652.62, 1289.92, 735.96, 925.03, 1105.18, 1971.53, 2004.19, 2384.61, 3321.36, 2284.76, 1815.81, 1693.39, 1049.64, 2815.65, 2684.94, 2783.99, 2001.18, 1599.2, 828.95, 1921.52, 1840.47, 2236.52, 2788.97, 1761.79, 3000.95, 1436.71, 2519.29, 3051.91, 2938.52, 2500.8], "meta_d": 2500.0, "cores": ["#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#16a34a", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a"]}, {"nome": "Maison", "fat": [1921.64, 1724.11, 0.0, 0.0, 0.0, 246.39, 543.88, 1335.58, 872.47, 1119.79, 775.83, 0.0, 78.74, 1037.47, 867.96, 1172.41, 1362.95, 689.52, 0.0, 701.02, 0.0, 568.25, 3529.76, 908.17, 940.83, 0.0, 344.2, 1697.3, 1105.01, 2286.24], "meta_d": 1980.0, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a"]}]
+  };
+
+  window.CD['mar'] = {
+    dias: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"],
+    fat: [46426.11, 30935.49, 43473.53, 42587.27, 42358.32, 49202.11, 56046.07, 49789.3, 32538.16, 43699.93, 41690.0, 46329.08, 62008.8, 72757.96, 53898.15, 38417.0, 39221.0, 51440.0, 45234.0, 58052.0, 66982.0, 55652.0, 37445.44, 45686.91, 44942.0, 42992.51, 49382.33, 67237.37, 51970.35, 37778.0, 47414.13],
+    meta: [59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45, 59928.45],
+    acum: [46426.11, 77361.6, 120835.13, 163422.4, 205780.72, 254982.83, 311028.9, 360818.2, 393356.36, 437056.29, 478746.29, 525075.37, 587084.17, 659842.13, 713740.28, 752157.28, 791378.28, 842818.28, 888052.28, 946104.28, 1013086.28, 1068738.28, 1106183.72, 1151870.63, 1196812.63, 1239805.14, 1289187.47, 1356424.84, 1408395.19, 1446173.19, 1493587.32],
+    metaAcum: [59928.45, 119856.89, 179785.34, 239713.79, 299642.23, 359570.68, 419499.13, 479427.57, 539356.02, 599284.47, 659212.91, 719141.36, 779069.81, 838998.25, 898926.7, 958855.15, 1018783.59, 1078712.04, 1138640.49, 1198568.93, 1258497.38, 1318425.83, 1378354.27, 1438282.72, 1498211.17, 1558139.61, 1618068.06, 1677996.51, 1737924.95, 1797853.4, 1857781.85],
+    cores: ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626"],
+    metaDiaria: 59928.45,
+    n: 31,
+    lojas: [{"nome": "Rio Mar Restaurante", "fat": [30767.61, 26666.83, 30408.13, 30625.0, 31085.68, 25861.94, 37316.81, 27971.26, 26817.41, 29473.35, 30667.45, 34396.58, 39670.35, 45007.84, 32449.79, 32285.78, 30311.64, 38897.5, 29851.57, 32593.31, 32379.49, 25788.27, 29131.29, 29746.77, 28802.02, 27299.78, 29767.85, 31166.66, 24375.08, 21289.0, 31191.72], "meta_d": 29032.26, "cores": ["#16a34a", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#16a34a"]}, {"nome": "Rio Mar Mercado", "fat": [11560.01, 0.0, 5441.87, 5012.11, 5419.18, 17059.0, 14323.22, 16709.1, 0.0, 6032.91, 3653.53, 4577.41, 11764.74, 16143.66, 15979.61, 0.0, 2687.73, 5884.99, 5980.66, 8835.86, 14871.69, 15669.79, 0.0, 5414.42, 4829.04, 5532.28, 8690.87, 22294.67, 17889.85, 0.0, 6109.94], "meta_d": 7259.09, "cores": ["#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626"]}, {"nome": "Paiva", "fat": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 527.99, 213.78, 333.56, 0.0, 0.0, 1043.0, 3997.0, 4362.0, 5414.0, 3282.34, 2961.2, 2968.09, 2913.87, 3651.22, 3429.2, 5408.42, 8865.96, 3058.0], "meta_d": 12193.55, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626"]}, {"nome": "Delivery", "fat": [1146.41, 1232.63, 1832.05, 1312.23, 710.55, 2302.62, 897.43, 1038.0, 1722.77, 1910.98, 2194.63, 2061.75, 2388.89, 7295.93, 2247.92, 1166.02, 1134.39, 1187.61, 1293.62, 1786.18, 2991.09, 1668.17, 1276.64, 1339.51, 1224.63, 1469.85, 2244.54, 5290.35, 926.37, 1025.4, 1157.47], "meta_d": 4838.71, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626"]}, {"nome": "Cabanga", "fat": [1656.25, 1368.53, 1612.29, 1520.52, 2241.76, 1775.7, 1724.0, 2488.97, 1773.84, 2755.36, 2135.46, 2615.99, 2785.2, 1592.47, 1398.7, 1741.79, 2316.01, 2297.93, 3027.54, 2380.11, 1669.06, 2190.49, 1721.09, 2443.04, 1678.77, 1431.61, 2795.84, 1595.75, 1506.79, 3734.25, 2123.46], "meta_d": 1814.52, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#16a34a", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#16a34a", "#16a34a"]}, {"nome": "Velocity", "fat": [1295.83, 1271.77, 2418.81, 3162.67, 2285.71, 1654.18, 1293.31, 1581.97, 2005.15, 3042.02, 1894.79, 2016.57, 1564.73, 1672.08, 1608.35, 2583.57, 2257.9, 2494.28, 2927.28, 7627.02, 10327.39, 4921.76, 1918.66, 2741.66, 3570.04, 2961.79, 1195.28, 2077.55, 1863.84, 2519.29, 2999.38], "meta_d": 1693.55, "cores": ["#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#16a34a", "#dc2626", "#16a34a", "#16a34a", "#16a34a", "#16a34a"]}, {"nome": "Lagoa Azul", "fat": [0.0, 395.73, 1760.38, 954.74, 615.44, 548.38, 491.3, 0.0, 218.99, 485.31, 1144.14, 660.78, 3328.04, 517.99, 0.0, 306.7, 213.97, 718.19, 1109.72, 832.01, 472.38, 0.0, 115.42, 1040.31, 1869.41, 1383.33, 1036.73, 753.19, 0.0, 344.2, 774.16], "meta_d": 1935.48, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#16a34a", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626"]}, {"nome": "Maison", "fat": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "meta_d": 1161.29, "cores": ["#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626", "#dc2626"]}]
+  };
+
+/* ── Tab navigation ── */
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(function(e){e.classList.remove('active')});
+  document.querySelectorAll('.tab-btn').forEach(function(e){e.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+document.getElementById('abr').classList.add('active');
+
+/* ── Chart helpers ── */
+var fmtBRL = function(v){return 'R$ '+Math.round(v).toLocaleString('pt-BR');};
+
+function makeCharts(tid) {
+  var d = window.CD[tid];
+  if(!d) return;
+
+  var ctx_d = document.getElementById('cd_'+tid);
+  var ctx_a = document.getElementById('ca_'+tid);
+  if(!ctx_d || !ctx_a) return;
+
+  if(window.CH[tid]) {
+    window.CH[tid].d.destroy();
+    window.CH[tid].a.destroy();
+  }
+
+  window.CH[tid] = {};
+
+  window.CH[tid].d = new Chart(ctx_d, {
+    type: 'bar',
+    data: {
+      labels: d.dias,
+      datasets: [
+        {label:'Faturamento', data:d.fat, backgroundColor:d.cores, borderRadius:3, borderSkipped:false},
+        {type:'line', label:'Meta Diária', data:d.meta, borderColor:'#1e3a5f',
+          borderWidth:2, borderDash:[6,3], pointRadius:0, fill:false, tension:0}
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmtBRL(c.parsed.y)}}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0}},
+        y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:function(v){return 'R$'+Math.round(v/1000)+'k'}}}
+      }
+    }
+  });
+
+  window.CH[tid].a = new Chart(ctx_a, {
+    type: 'line',
+    data: {
+      labels: d.dias,
+      datasets: [
+        {label:'Realizado Acumulado', data:d.acum, borderColor:'#16a34a',
+          backgroundColor:'rgba(22,163,74,.09)', fill:true, tension:0.3,
+          pointRadius:0, borderWidth:2.5},
+        {label:'Meta Acumulada', data:d.metaAcum, borderColor:'#1e3a5f',
+          borderDash:[6,3], fill:false, tension:0, pointRadius:0, borderWidth:1.5}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmtBRL(c.parsed.y)}}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},maxRotation:0}},
+        y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:function(v){return 'R$'+Math.round(v/1000)+'k'}}}
+      }
+    }
+  });
+}
+
+/* ── Filtro de período ── */
+function filtrar(tid, from, to, btn) {
+  // Botões ativos
+  var bar = document.getElementById('filter_'+tid);
+  bar.querySelectorAll('.fbtn:not(.fbtn-apply)').forEach(function(b){b.classList.remove('active')});
+  if(btn) btn.classList.add('active');
+  document.getElementById('from_'+tid).value = from;
+  document.getElementById('to_'+tid).value   = to;
+  aplicarDados(tid, from, to);
+}
+
+function aplicarFiltro(tid) {
+  var from = parseInt(document.getElementById('from_'+tid).value)||1;
+  var to   = parseInt(document.getElementById('to_'+tid).value)||window.CD[tid].n;
+  var bar  = document.getElementById('filter_'+tid);
+  bar.querySelectorAll('.fbtn:not(.fbtn-apply)').forEach(function(b){b.classList.remove('active')});
+  aplicarDados(tid, from, to);
+}
+
+function selecionarLoja(tid) {
+  var from = parseInt(document.getElementById('from_'+tid).value)||1;
+  var to   = parseInt(document.getElementById('to_'+tid).value)||window.CD[tid].n;
+  aplicarDados(tid, from, to);
+}
+
+function aplicarDados(tid, from, to) {
+  var d  = window.CD[tid];
+  var ch = window.CH[tid];
+  if(!d||!ch) return;
+
+  var sel = document.getElementById('loja_'+tid);
+  var lojaIdx = sel ? parseInt(sel.value) : -1;
+  var useFat, useMeta_d, useCores;
+  if(lojaIdx >= 0 && d.lojas && d.lojas[lojaIdx]) {
+    var lj = d.lojas[lojaIdx];
+    useFat    = lj.fat;
+    useMeta_d = lj.meta_d;
+    useCores  = lj.cores;
+  } else {
+    useFat    = d.fat;
+    useMeta_d = d.metaDiaria;
+    useCores  = d.cores;
+  }
+
+  var f1 = Math.max(1,from)-1, f2 = Math.min(to,d.n);
+  var diasF  = d.dias.slice(f1,f2);
+  var fatF   = useFat.slice(f1,f2);
+  var metaF  = diasF.map(function(){return Math.round(useMeta_d);});
+  var coresF = useCores.slice(f1,f2);
+
+  ch.d.data.labels = diasF;
+  ch.d.data.datasets[0].data = fatF;
+  ch.d.data.datasets[0].backgroundColor = coresF;
+  ch.d.data.datasets[1].data = metaF;
+  ch.d.update();
+
+  var s=0, acumF=[];
+  fatF.forEach(function(v){s+=v; acumF.push(Math.round(s));});
+  var metaAcumF = diasF.map(function(_,i){return Math.round(useMeta_d*(f1+i+1));});
+
+  ch.a.data.labels = diasF;
+  ch.a.data.datasets[0].data = acumF;
+  ch.a.data.datasets[1].data = metaAcumF;
+  ch.a.update();
+}
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', function() {
+  makeCharts('abr');
+  makeCharts('mar');
+  filtrar('abr', 1, 30, null);
+  filtrar('mar', 1, 31, null);
+});
+</script>
+</body>
+</html>
