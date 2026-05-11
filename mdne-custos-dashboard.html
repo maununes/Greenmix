@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MDNE · Dashboard de Custos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:    #080808;
+      --bg2:   #111111;
+      --bg3:   #1a1a1a;
+      --bg4:   #222222;
+      --border:#2a2a2a;
+      --cream: #e8e0cc;
+      --muted: #888;
+      --gold:  #c9a84c;
+      --green: #4ecb8a;
+      --red:   #e05555;
+      --blue:  #5588e0;
+      --purple:#a078e8;
+      --sidebar-w: 224px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--cream); font-family: 'Inter', sans-serif; font-size: 13px; display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ─────────────────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--bg2); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 20px 18px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-brand .logo { font-size: 17px; font-weight: 700; letter-spacing: .04em; color: var(--gold); }
+    .sidebar-brand .sub  { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-group { padding: 10px 0 4px; }
+    .nav-label { font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0 18px 6px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 18px; cursor: pointer;
+      color: var(--muted); font-size: 12px; font-weight: 500;
+      transition: background .15s, color .15s;
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { background: var(--bg3); color: var(--cream); }
+    .nav-item.active { background: var(--bg3); color: var(--cream); border-left-color: var(--gold); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-ok   { background: var(--green); }
+    .dot-par  { background: var(--gold); }
+    .dot-pend { background: #444; }
+    .sidebar-footer { margin-top: auto; padding: 14px 18px; border-top: 1px solid var(--border); font-size: 10px; color: #444; }
+
+    /* ── MAIN ────────────────────────────────────────── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-size: 14px; font-weight: 600; color: var(--cream); }
+    .topbar-meta  { font-size: 11px; color: var(--muted); }
+    .content { padding: 28px; max-width: 1200px; }
+
+    /* ── TABS ────────────────────────────────────────── */
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    /* ── KPI GRID ────────────────────────────────────── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+    .kpi {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 16px 18px;
+    }
+    .kpi-label { font-size: 10px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 6px; }
+    .kpi-value { font-size: 22px; font-weight: 700; color: var(--cream); line-height: 1; }
+    .kpi-value.gold   { color: var(--gold); }
+    .kpi-value.green  { color: var(--green); }
+    .kpi-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+    /* ── SECTION TITLE ───────────────────────────────── */
+    .section-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .section-title.gold { color: var(--gold); }
+    h2.page-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    h2.page-title .small { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+    .page-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+
+    /* ── RACIONAL ────────────────────────────────────── */
+    .racional {
+      background: var(--bg2); border-left: 3px solid var(--gold);
+      border-radius: 0 8px 8px 0; padding: 16px 18px; margin-bottom: 24px;
+    }
+    .racional h3 { font-size: 11px; font-weight: 700; color: var(--gold); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px; }
+    .racional p  { font-size: 12px; color: var(--cream); line-height: 1.65; margin-bottom: 6px; }
+    .racional p:last-child { margin-bottom: 0; }
+    .racional ul { padding-left: 16px; }
+    .racional li { font-size: 12px; color: var(--cream); line-height: 1.65; margin-bottom: 3px; }
+
+    /* ── EMPTY STATE ─────────────────────────────────── */
+    .empty-state {
+      background: var(--bg2); border: 1px dashed var(--border); border-radius: 8px;
+      padding: 40px; text-align: center; color: var(--muted);
+    }
+    .empty-state .icon { font-size: 28px; margin-bottom: 10px; }
+    .empty-state p { font-size: 12px; line-height: 1.6; }
+
+    /* ── DATA TABLE ──────────────────────────────────── */
+    .dt-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+    .dt-head { padding: 13px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .dt-head-title { font-size: 12px; font-weight: 600; color: var(--cream); }
+    .dt-head-total { font-size: 12px; font-weight: 700; color: var(--gold); }
+    table.dt { width: 100%; border-collapse: collapse; }
+    table.dt th { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); padding: 9px 18px; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg3); }
+    table.dt td { padding: 8px 18px; font-size: 12px; color: var(--cream); border-bottom: 1px solid #1e1e1e; }
+    table.dt tr:last-child td { border-bottom: none; }
+    table.dt tr.total td { font-weight: 700; color: var(--gold); background: var(--bg3); border-top: 1px solid var(--border); }
+    table.dt tr.sub td:first-child { padding-left: 32px; color: var(--muted); font-size: 11px; }
+    table.dt tr.section-head td { background: var(--bg3); font-weight: 600; font-size: 11px; letter-spacing: .04em; color: var(--muted); text-transform: uppercase; padding: 7px 18px; }
+    table.dt td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.dt tr.bm-nmd td { background: rgba(201,168,76,.07); color: var(--gold); font-weight: 600; }
+
+    /* ── VERTICAL BAR CHART ──────────────────────────── */
+    .vchart-outer { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 20px 18px 0; margin-bottom: 24px; overflow-x: auto; }
+    .vchart { display: flex; gap: 8px; align-items: flex-end; height: 200px; min-width: 860px; }
+    .vcol { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; cursor: pointer; }
+    .vcol:hover .vbar { filter: brightness(1.2); }
+    .vval { font-size: 9px; color: var(--muted); margin-bottom: 4px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .vbar { width: 100%; border-radius: 4px 4px 0 0; height: 0; transition: height 1s cubic-bezier(.4,0,.2,1); min-width: 38px; }
+    .vlabels { display: flex; gap: 8px; min-width: 860px; padding: 8px 0 14px; border-top: 1px solid var(--border); }
+    .vlabel { flex: 1; font-size: 9px; color: var(--muted); text-align: center; line-height: 1.4; }
+
+    /* ── PILARES GRID ────────────────────────────────── */
+    .pilares-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+    .pilar-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; cursor: pointer; transition: border-color .2s, background .2s;
+    }
+    .pilar-card:hover { border-color: var(--gold); background: var(--bg3); }
+    .pilar-card .pc-name { font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .pilar-card .pc-val  { font-size: 16px; font-weight: 700; color: var(--cream); }
+    .pilar-card .pc-badge { display: inline-block; font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; margin-top: 5px; }
+    .badge-ok   { background: rgba(78,203,138,.12); color: var(--green); }
+    .badge-par  { background: rgba(201,168,76,.12);  color: var(--gold); }
+    .badge-pend { background: rgba(255,255,255,.05);  color: #555; }
+    .pilar-card.c-ok   { border-top: 2px solid var(--green); }
+    .pilar-card.c-par  { border-top: 2px solid var(--gold); }
+    .pilar-card.c-pend { border-top: 2px solid #333; }
+
+    /* ── TWO / THREE COL ─────────────────────────────── */
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .info-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+    .info-box h4 { font-size: 10px; font-weight: 700; color: var(--gold); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px; }
+    .info-box p  { font-size: 12px; color: var(--cream); line-height: 1.6; }
+    .info-box ul { padding-left: 14px; }
+    .info-box li { font-size: 12px; color: var(--cream); line-height: 1.6; }
+
+    /* ── STAT ROW ────────────────────────────────────── */
+    .stat-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 13px 18px; min-width: 130px; }
+    .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+    .stat-val   { font-size: 18px; font-weight: 700; color: var(--cream); }
+    .stat-val.gold  { color: var(--gold); }
+    .stat-val.green { color: var(--green); }
+    .stat-val.blue  { color: var(--blue); }
+
+    /* ── SCROLLBAR ───────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════ SIDEBAR ════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">MDNE</div>
+    <div class="sub">Dashboard de Custos · 2025/26</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Visão Geral</div>
+    <div class="nav-item active" onclick="go('home')"><span class="dot dot-ok"></span>Home</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-label">Pilares</div>
+    <div class="nav-item" onclick="go('equipe')">      <span class="dot dot-pend"></span>Equipe</div>
+    <div class="nav-item" onclick="go('sistemas')">    <span class="dot dot-ok"></span>Sistemas</div>
+    <div class="nav-item" onclick="go('pdv')">         <span class="dot dot-ok"></span>PDV</div>
+    <div class="nav-item" onclick="go('patrocinios')"> <span class="dot dot-pend"></span>Patrocínios</div>
+    <div class="nav-item" onclick="go('institucional')"><span class="dot dot-ok"></span>Institucional</div>
+    <div class="nav-item" onclick="go('produto')">     <span class="dot dot-ok"></span>Produto</div>
+    <div class="nav-item" onclick="go('trade')">       <span class="dot dot-ok"></span>Trade</div>
+    <div class="nav-item" onclick="go('mdvendas')">    <span class="dot dot-par"></span>MDVendas</div>
+    <div class="nav-item" onclick="go('conteudo')">    <span class="dot dot-par"></span>Conteúdo</div>
+    <div class="nav-item" onclick="go('inbound')">     <span class="dot dot-par"></span>Inbound</div>
+    <div class="nav-item" onclick="go('performance')"> <span class="dot dot-pend"></span>Performance</div>
+    <div class="nav-item" onclick="go('agencia')">     <span class="dot dot-ok"></span>Agência</div>
+    <div class="nav-item" onclick="go('audiovisual')"> <span class="dot dot-ok"></span>Audiovisual</div>
+    <div class="nav-item" onclick="go('midia')">       <span class="dot dot-ok"></span>Mídia</div>
+    <div class="nav-item" onclick="go('sinalizacaografica')"><span class="dot dot-ok"></span>Sinalização/Gráfica/Outros</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div>NMD.NU · Operação Mkt</div>
+    <div style="margin-top:3px;color:#333;">v2 · Mai 2026</div>
+    <div style="margin-top:12px;border-top:1px solid #1e1e1e;padding-top:10px">
+      <span onclick="go('analise')" style="font-size:9px;color:#2a2a2a;cursor:pointer;letter-spacing:.06em;transition:color .2s" onmouseover="this.style.color='#555'" onmouseout="this.style.color='#2a2a2a'">⬡ análise interna</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════════════════ MAIN ════════════════════════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard de Custos — Visão Geral</div>
+    <div class="topbar-meta">Operação Mkt MDNE · 2025/2026</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ HOME ══════════════════════════════════════ -->
+    <div class="tab active" id="tab-home">
+      <h2 class="page-title">Operação de Marketing<span class="small">Resumo Executivo</span></h2>
+      <p class="page-subtitle">Visão consolidada de todos os pilares · Valores em R$</p>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Investimento Total</div>
+          <div class="kpi-value gold">R$51,0Mi</div>
+          <div class="kpi-sub">Soma dos pilares mapeados</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Maior Pilar</div>
+          <div class="kpi-value">Sinal./Grá/Out.</div>
+          <div class="kpi-sub">R$19.640.407 · 38,5%</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Volume de Peças</div>
+          <div class="kpi-value green">63.723</div>
+          <div class="kpi-sub">Peças mapeadas</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Pilares Mapeados</div>
+          <div class="kpi-value">9 <span style="font-size:13px;color:var(--muted)">/ 16</span></div>
+          <div class="kpi-sub">56% com dados completos</div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Produtividade — Volume de Peças</h4>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:12px">Jan 2025 – Abr 2026 · 16 meses</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total mapeado</div>
+            <div style="font-size:26px;font-weight:700;color:var(--green);line-height:1">63.723</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">peças produzidas</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Por mês</div>
+            <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">~3.983</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">peças / mês</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Por dia útil — Recife</div>
+            <div style="font-size:26px;font-weight:700;color:var(--blue);line-height:1">~192</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">peças / dia útil</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">~332 dias úteis · excl. fins de semana, feriados nacionais, Carnaval e feriados locais Recife</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Custo por Peça</div>
+            <div style="font-size:26px;font-weight:700;color:var(--purple);line-height:1">R$84,25</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">fee agência ÷ total de peças</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">R$5.368.637 ÷ 63.723</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-title gold">Distribuição por Pilar</p>
+      <div class="vchart-outer">
+        <div class="vchart" id="home-bars"></div>
+        <div class="vlabels" id="home-labels"></div>
+      </div>
+
+      <p class="section-title" style="margin-top:8px">Todos os Pilares</p>
+      <div class="pilares-grid" id="pilares-grid"></div>
+    </div>
+
+    <!-- ══ EQUIPE ════════════════════════════════════ -->
+    <div class="tab" id="tab-equipe">
+      <h2 class="page-title">Equipe</h2>
+      <p class="page-subtitle">Estrutura de time e custos de pessoal</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>O pilar Equipe representa o custo de headcount interno dedicado à operação de marketing. Inclui salários, encargos, benefícios e eventual remuneração variável de profissionais CLT ou PJ alocados diretamente nas entregas da operação.</p>
+        <p>A definição clara dos custos de equipe é fundamental para calcular o custo real por entrega e comparar com alternativas terceirizadas. Um time interno bem dimensionado reduz dependência de fornecedores externos e garante consistência de marca.</p>
+      </div>
+      <div class="empty-state">
+        <div class="icon">👥</div>
+        <p>Dados de equipe ainda não mapeados.<br>Inclua headcount, cargos, salários e encargos para completar este pilar.</p>
+      </div>
+    </div>
+
+    <!-- ══ SISTEMAS ══════════════════════════════════ -->
+    <div class="tab" id="tab-sistemas">
+      <h2 class="page-title">Sistemas <span class="small">R$196.295,57</span></h2>
+      <p class="page-subtitle">Ferramentas, licenças e infraestrutura tecnológica</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Sistemas engloba toda a stack tecnológica necessária para operar o marketing: desde ferramentas criativas (Adobe) até plataformas de automação (RD Station), inteligência de dados (Power BI), gestão de leads (Mentor IA) e recursos de PDV digital (Mini PC, Floorfy, QR Code).</p>
+        <p>O investimento em sistemas é recorrente e estrutural. Ferramentas bem escolhidas aumentam a produtividade da equipe, melhoram a qualidade das entregas e geram dados para tomada de decisão. O custo por licença deve ser avaliado em relação ao volume de uso e ao impacto na operação.</p>
+      </div>
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Ferramentas e Licenças</span><span class="dt-head-total">R$196.295,57</span></div>
+        <table class="dt">
+          <thead><tr><th>Ferramenta</th><th>Categoria</th><th class="num">Custo Anual (R$)</th></tr></thead>
+          <tbody>
+            <tr><td>Adobe Creative Cloud</td><td>Design / Criação</td><td class="num">18.000,00</td></tr>
+            <tr><td>Power BI</td><td>Business Intelligence</td><td class="num">5.400,00</td></tr>
+            <tr><td>Mini PC (PDV Digital)</td><td>Hardware PDV</td><td class="num">28.000,00</td></tr>
+            <tr><td>Floorfy (Tour Virtual)</td><td>PDV Digital</td><td class="num">14.400,00</td></tr>
+            <tr><td>QR Code Manager</td><td>PDV Digital</td><td class="num">3.600,00</td></tr>
+            <tr><td>RD Station Marketing</td><td>Automação / CRM</td><td class="num">36.000,00</td></tr>
+            <tr><td>RD Station CRM</td><td>CRM / Vendas</td><td class="num">18.000,00</td></tr>
+            <tr><td>RD Station Conversas</td><td>Atendimento</td><td class="num">9.600,00</td></tr>
+            <tr><td>Mentor IA — Leads</td><td>Inteligência Artificial</td><td class="num">28.200,00</td></tr>
+            <tr><td>Mentor IA — Relacionamento</td><td>Inteligência Artificial</td><td class="num">19.200,00</td></tr>
+            <tr><td>Mentor IA — Pós-venda</td><td>Inteligência Artificial</td><td class="num">15.895,57</td></tr>
+            <tr class="total"><td colspan="2">Total</td><td class="num">196.295,57</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ PDV ════════════════════════════════════════ -->
+    <div class="tab" id="tab-pdv">
+      <h2 class="page-title">PDV <span class="small">R$12.393.498</span></h2>
+      <p class="page-subtitle">Pontos de Venda — Despesas Operacionais e Estruturais por casa · 2025 FY / 2026 1TRI</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>O pilar PDV cobre todos os custos das casas de venda físicas do MDNE. Os valores estão divididos em duas naturezas: <strong style="color:var(--cream)">Despesas Operacionais do Dia a Dia</strong> (aluguel, água, energia, internet, terceirizados, manutenção, alimentação e outros custos recorrentes) e <strong style="color:var(--cream)">Despesas Estruturais</strong> (arquitetura, projeto e obras de reforma ou implantação).</p>
+        <p>O PDV é o ponto de contato mais crítico da jornada do cliente. Um ambiente bem ambientado acelera a decisão de compra e reflete diretamente na percepção de valor da marca. A separação entre custos operacionais e estruturais é essencial para o planejamento financeiro: despesas do dia a dia são recorrentes e previsíveis; despesas estruturais são pontuais e devem ser analisadas por ciclo de vida da loja.</p>
+        <p><strong style="color:var(--gold)">Nota estratégica:</strong> Negociar contratos dos espaços nos shoppings em grupo para otimização de custos — ex.: JCPM em quase todas as praças.</p>
+      </div>
+
+      <p class="section-title gold">Resumo por Casa</p>
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Total por Casa</span><span class="dt-head-total">R$12.393.498</span></div>
+        <table class="dt">
+          <thead><tr><th>Casa</th><th class="num">Op. Dia a Dia (R$)</th><th class="num">Estrutural (R$)</th><th class="num">Total (R$)</th></tr></thead>
+          <tbody>
+            <tr><td>Casa MD AL</td><td class="num">1.250.278</td><td class="num">141.036</td><td class="num">1.391.314</td></tr>
+            <tr><td>Casa MD BA</td><td class="num">668.335</td><td class="num">58.151</td><td class="num">726.486</td></tr>
+            <tr><td>Casa MD CE</td><td class="num">804.397</td><td class="num">762.432</td><td class="num">1.566.830</td></tr>
+            <tr><td>Casa MD PB</td><td class="num">570.472</td><td class="num">156.131</td><td class="num">726.603</td></tr>
+            <tr><td>Casa MD PE — Mirante do Cais</td><td class="num">—</td><td class="num">559.641</td><td class="num">559.641</td></tr>
+            <tr><td>Casa MD PE — Riomar</td><td class="num">1.062.436</td><td class="num">3.515.046</td><td class="num">4.577.482</td></tr>
+            <tr><td>Casa MD PE — Shopping Recife</td><td class="num">401.883</td><td class="num">206.742</td><td class="num">608.626</td></tr>
+            <tr><td>Casa MD SE</td><td class="num">535.538</td><td class="num">401.079</td><td class="num">936.616</td></tr>
+            <tr><td>Casa MOOD RN</td><td class="num">595.471</td><td class="num">704.429</td><td class="num">1.299.900</td></tr>
+            <tr class="total"><td>Total</td><td class="num">5.888.810</td><td class="num">6.504.687</td><td class="num">12.393.498</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="section-title">Detalhamento — Despesas Operacionais do Dia a Dia</p>
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Operacional por Categoria e Casa</span><span class="dt-head-total">R$5.888.810</span></div>
+        <table class="dt">
+          <thead><tr><th>Categoria</th><th class="num">AL</th><th class="num">BA</th><th class="num">CE</th><th class="num">PB</th><th class="num">PE-Riomar</th><th class="num">PE-Shop.</th><th class="num">SE</th><th class="num">MOOD RN</th><th class="num" style="color:var(--gold)">Total</th></tr></thead>
+          <tbody>
+            <tr><td>Aluguel / IPTU / Condomínio</td><td class="num">—</td><td class="num">57.047</td><td class="num">225.148</td><td class="num">—</td><td class="num">802.705</td><td class="num">317.459</td><td class="num">144.404</td><td class="num">257.087</td><td class="num" style="color:var(--cream);font-weight:600">1.803.850</td></tr>
+            <tr><td>Água</td><td class="num">77.827</td><td class="num">—</td><td class="num">26.384</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">7.188</td><td class="num">—</td><td class="num" style="color:var(--cream);font-weight:600">111.399</td></tr>
+            <tr><td>Energia Elétrica</td><td class="num">135.978</td><td class="num">62.557</td><td class="num">87.932</td><td class="num">120.828</td><td class="num">—</td><td class="num">—</td><td class="num">41.824</td><td class="num">38.587</td><td class="num" style="color:var(--cream);font-weight:600">487.706</td></tr>
+            <tr><td>Internet / Infraestrutura (TI)</td><td class="num">19.806</td><td class="num">7.300</td><td class="num">50.909</td><td class="num">19.495</td><td class="num">12.044</td><td class="num">16.956</td><td class="num">21.127</td><td class="num">16.600</td><td class="num" style="color:var(--cream);font-weight:600">164.237</td></tr>
+            <tr><td>Terceirizados</td><td class="num">790.977</td><td class="num">—</td><td class="num">237.423</td><td class="num">183.853</td><td class="num">144.497</td><td class="num">22.848</td><td class="num">181.984</td><td class="num">235.469</td><td class="num" style="color:var(--cream);font-weight:600">1.797.051</td></tr>
+            <tr><td>Manutenção</td><td class="num">209.034</td><td class="num">488.397</td><td class="num">116.085</td><td class="num">221.827</td><td class="num">39.841</td><td class="num">20.651</td><td class="num">77.849</td><td class="num">36.470</td><td class="num" style="color:var(--cream);font-weight:600">1.210.154</td></tr>
+            <tr><td>Alimentos e Bebidas</td><td class="num">14.817</td><td class="num">19.088</td><td class="num">46.517</td><td class="num">24.470</td><td class="num">55.143</td><td class="num">23.970</td><td class="num">61.161</td><td class="num">7.580</td><td class="num" style="color:var(--cream);font-weight:600">252.746</td></tr>
+            <tr><td>Outros</td><td class="num">1.840</td><td class="num">33.945</td><td class="num">14.000</td><td class="num">—</td><td class="num">8.206</td><td class="num">—</td><td class="num">—</td><td class="num">3.679</td><td class="num" style="color:var(--cream);font-weight:600">61.670</td></tr>
+            <tr class="total"><td>Total Operacional</td><td class="num">1.250.278</td><td class="num">668.335</td><td class="num">804.397</td><td class="num">570.472</td><td class="num">1.062.436</td><td class="num">401.883</td><td class="num">535.538</td><td class="num">595.471</td><td class="num">5.888.810</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="section-title">Detalhamento — Despesas Estruturais</p>
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Estrutural por Categoria e Casa</span><span class="dt-head-total">R$6.504.687</span></div>
+        <table class="dt">
+          <thead><tr><th>Categoria</th><th class="num">AL</th><th class="num">BA</th><th class="num">CE</th><th class="num">PB</th><th class="num">PE-Mirante</th><th class="num">PE-Riomar</th><th class="num">PE-Shop.</th><th class="num">SE</th><th class="num">MOOD RN</th><th class="num" style="color:var(--gold)">Total</th></tr></thead>
+          <tbody>
+            <tr><td>Arquitetura e Projeto</td><td class="num">13.980</td><td class="num">28.547</td><td class="num">140.180</td><td class="num">—</td><td class="num">559.641</td><td class="num">2.831.139</td><td class="num">112.411</td><td class="num">388.687</td><td class="num">704.429</td><td class="num" style="color:var(--cream);font-weight:600">4.779.014</td></tr>
+            <tr><td>Obra</td><td class="num">127.056</td><td class="num">29.605</td><td class="num">622.252</td><td class="num">156.131</td><td class="num">—</td><td class="num">683.908</td><td class="num">94.331</td><td class="num">12.391</td><td class="num">—</td><td class="num" style="color:var(--cream);font-weight:600">1.725.674</td></tr>
+            <tr class="total"><td>Total Estrutural</td><td class="num">141.036</td><td class="num">58.151</td><td class="num">762.432</td><td class="num">156.131</td><td class="num">559.641</td><td class="num">3.515.046</td><td class="num">206.742</td><td class="num">401.079</td><td class="num">704.429</td><td class="num">6.504.687</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ PATROCÍNIOS ═══════════════════════════════ -->
+    <div class="tab" id="tab-patrocinios">
+      <h2 class="page-title">Patrocínios</h2>
+      <p class="page-subtitle">Ações de patrocínio, naming rights e cotas</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Patrocínios representam investimentos em propriedades externas — eventos, esportistas, festivais, causas sociais ou produções culturais — que ampliam o alcance da marca MDNE além dos seus canais próprios. A escolha de patrocínios deve ser orientada pela afinidade de público, cobertura geográfica e retorno de mídia espontânea.</p>
+        <p>Uma boa estratégia de patrocínio gera associação positiva de marca, presença em ambientes de alta atenção e oportunidade de ativação com o público no momento certo da jornada.</p>
+      </div>
+      <div class="empty-state">
+        <div class="icon">🤝</div>
+        <p>Dados de patrocínios ainda não mapeados.<br>Inclua propriedades, valores de cota e praças para completar este pilar.</p>
+      </div>
+    </div>
+
+    <!-- ══ INSTITUCIONAL ═════════════════════════════ -->
+    <div class="tab" id="tab-institucional">
+      <h2 class="page-title">Institucional <span class="small">R$670.000</span></h2>
+      <p class="page-subtitle">Branding, identidade e pesquisa de marca</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>O pilar Institucional sustenta a identidade e o posicionamento da marca no longo prazo. Engloba o redesign ou atualização de identidade visual, guias de marca, brand book e pesquisas que medem saúde de marca, share of voice e percepção do consumidor.</p>
+        <p>Investir em branding é construir ativos intangíveis de alta durabilidade. Uma marca forte reduz o custo de aquisição por cliente, aumenta o ticket médio e cria barreiras de entrada para concorrentes. A pesquisa periódica valida se o posicionamento está sendo percebido como desejado.</p>
+      </div>
+      <p class="section-title gold">Quadro Comparativo — Branding 2021 vs 2025</p>
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Evolução do Investimento Institucional</span><span class="dt-head-total">+57,6% em valor total</span></div>
+        <table class="dt">
+          <thead><tr><th>Item</th><th class="num">2021 (R$)</th><th>Fornecedor 2021</th><th class="num">2025 (R$)</th><th>Fornecedor 2025</th><th class="num">Variação</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Branding</td>
+              <td class="num">240.000</td>
+              <td>Touch</td>
+              <td class="num">110.000</td>
+              <td>NMD.NU</td>
+              <td class="num" style="color:var(--green)">–54%</td>
+            </tr>
+            <tr>
+              <td>Pesquisa de Marca</td>
+              <td class="num">135.000</td>
+              <td>Ipsos (Fase 1)</td>
+              <td class="num">560.000</td>
+              <td>Box 1824</td>
+              <td class="num" style="color:var(--red)">+315%</td>
+            </tr>
+            <tr>
+              <td>Desenho de Marca</td>
+              <td class="num">50.000 *</td>
+              <td>Estúdio Mola</td>
+              <td class="num" style="color:var(--muted)">Incluso no Branding</td>
+              <td style="color:var(--muted)">NMD.NU</td>
+              <td class="num" style="color:var(--muted)">—</td>
+            </tr>
+            <tr class="total">
+              <td>Total</td>
+              <td class="num">425.000</td>
+              <td></td>
+              <td class="num">670.000</td>
+              <td></td>
+              <td class="num" style="color:var(--red)">+57,6%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="racional" style="margin-top:0">
+        <h3>Leitura do Comparativo</h3>
+        <p><strong style="color:var(--cream)">Branding caiu 54% — mas o escopo da NMD.NU é incomparavelmente maior.</strong> Em 2021, a Touch cobrou R$240.000 por um trabalho de escopo muito mais simples e com qualidade inferior. Em 2025, a NMD.NU entregou por R$110.000 um trabalho colossal: a criação completa da arquitetura de marca do novo grupo <strong style="color:var(--gold)">MDNE</strong>, que engloba três marcas com posicionamentos distintos — <strong style="color:var(--cream)">Moura Dubeux</strong> (alto padrão e luxo), <strong style="color:var(--cream)">Mood</strong> (médio padrão) e a criação do zero da marca <strong style="color:var(--cream)">Un1ca</strong> (focada no mercado MCMV / Minha Casa Minha Vida).</p>
+        <p>O escopo entregue pela NMD.NU incluiu: arquitetura de marca do grupo, sinalização, brand book completo, tom verbal e linguagem de comunicação, cascateamento inicial para a cultura interna da companhia, redesenho de marcas internas e submarcas do grupo. Um trabalho de construção de identidade completo e de longa duração — um ativo estratégico de altíssimo valor para o grupo.</p>
+        <p><strong style="color:var(--cream)">O IPCA corrobora a análise.</strong> Corrigindo os R$240.000 da Touch pelo IPCA acumulado de 2021 a 2024 (10,06% + 5,79% + 4,62% + 4,83% = <strong style="color:var(--gold)">≈27,7% acumulado</strong>), o preço equivalente em valores de 2025 seria de aproximadamente <strong style="color:var(--cream)">R$306.500</strong>. A NMD.NU cobrou R$110.000 — ou seja, <strong style="color:var(--gold)">64% abaixo do preço corrigido da Touch</strong>.</p>
+        <p><strong style="color:var(--cream)">Pesquisa cresceu 315%</strong> (R$135k → R$560k): em 2021 a Ipsos entregou apenas a Fase 1 do estudo, que foi apenas quantitativa em 5 praças. Já a Box 1824 em 2025 entregou um estudo completo contemplando 7 praças, contendo: pesquisa de comportamento (imersão), qualitativa, quantitativa. Esse aumento de escopo e valor é estratégico: a operação agora pode tomar decisões baseadas em dados reais de percepção de mercado e público.</p>
+      </div>
+
+      <div class="info-box" style="margin-top:24px;margin-bottom:24px">
+        <h4>Fee Mensal NMD.NU — Institucional</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2025 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$104.318</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">MD R$74.070 · Mood R$20.748 · Un1ca R$9.500</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2026 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$109.809</div>
+            <div style="font-size:10px;color:var(--green);margin-top:4px">+5% vs 2025</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px;line-height:1.6">MD R$77.969 · Mood R$21.840 · Un1ca R$10.000</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Custo por Peça — 2026</div>
+            <div style="font-size:22px;font-weight:700;color:var(--blue);line-height:1">R$93,14</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">~1.179 peças / mês</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">Era R$126,76 / peça em 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:24px">
+        <div class="info-box">
+          <h4>Volume de Peças — Institucional</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+              <div style="font-size:26px;font-weight:700;color:var(--cream);line-height:1">9.881</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">~823 peças / mês</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+              <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">4.715</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">~1.179 peças / mês</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.6">
+            O crescimento de ~91% no volume mensal entre 2025 e o 1TRI/2026 reflete a expansão do escopo institucional à medida que o grupo amadurece sua comunicação.
+          </div>
+        </div>
+        <div class="info-box">
+          <h4>Demandas Não Precificadas — Outras Áreas</h4>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5">Solicitações recorrentes de outras áreas do grupo que não estão contempladas no escopo contratado e não possuem precificação definida:</p>
+          <ul style="padding-left:14px">
+            <li>ELO</li>
+            <li>Evento de Engenharia</li>
+            <li>Apresentações Diretoria / Conselho</li>
+            <li>Apresentações Incorporação para Terreneiro</li>
+            <li>Apresentação de RI</li>
+            <li>Plano de Mídia para RI / Financeiro</li>
+            <li>Apresentações para Premiação (ex.: ADEMI)</li>
+            <li>Tema para Confraternização MDNE</li>
+            <li>Institucional Novo Cais</li>
+            <li style="color:var(--muted);font-style:italic">e outros</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Dificuldades para Pagamentos</h4>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Principais gargalos identificados no processo de pagamento a fornecedores:</p>
+          <ul style="padding-left:14px">
+            <li style="margin-bottom:8px">Burocracia para cadastro de fornecedores</li>
+            <li style="margin-bottom:8px">Tempo para cadastro de fornecedores</li>
+            <li style="margin-bottom:8px">Esteira de pagamento longa e demorada</li>
+            <li>Pagamentos bi-tributados — impacto direto no custo operacional</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Pagamentos Bi-tributados — Comparativo</h4>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5">Valores pagos com incidência de bi-tributação por ano:</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+              <div style="font-size:22px;font-weight:700;color:var(--red);line-height:1">R$710.044</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Trimestre</div>
+              <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$104.197</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PRODUTO ════════════════════════════════════ -->
+    <div class="tab" id="tab-produto">
+      <h2 class="page-title">Produto <span class="small">R$16.733.137</span></h2>
+      <p class="page-subtitle">Produção de materiais + mídia de lançamento</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Produto é o maior pilar da operação — e o de maior complexidade. Engloba toda a produção de material de comunicação dos empreendimentos: books, sinalização de obra, audiovisual, maquetes, ambientação de sala de vendas e demais materiais. Inclui também a mídia paga no período de lançamento de cada produto.</p>
+        <p>O volume de peças produzidas é expressivo: <strong style="color:var(--cream)">26.288 peças em 2025</strong> e <strong style="color:var(--cream)">12.796 peças no 1TRI/2026</strong> — um ritmo crescente que evidencia a expansão da operação. A diversidade de formatos e a necessidade de agilidade regional fazem deste pilar um dos mais exigentes em gestão de fornecedores.</p>
+        <p>Um ponto crítico do pilar é a <strong style="color:var(--gold)">sobreposição de produção de imagens e vídeos</strong>: a MDNE contrata fornecedores externos que não entregam dentro do prazo necessário para os lançamentos, obrigando a NMD.NU a executar o mesmo trabalho no tempo exigido.</p>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Valor Fechado por Lançamento + Variável por Vendas</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2025 — Cond. Fechado</div>
+            <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$30.000</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">por lançamento</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2026 — Cond. Fechado</div>
+            <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$50.000</div>
+            <div style="font-size:10px;color:var(--green);margin-top:4px">+5% vs 2025</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">por lançamento</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Incorporação</div>
+            <div style="font-size:13px;font-weight:600;color:var(--cream);line-height:1.6;margin-top:4px">MD 0,20% VGV<br>Mood 0,12% VGV<br>Un1ca 0,08% VGV</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">modelo variável · sem fee fixo mensal</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Volume de Peças — Produto</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+              <div style="font-size:26px;font-weight:700;color:var(--cream);line-height:1">26.288</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">~2.191 peças / mês</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+              <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">12.796</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">~3.199 peças / mês</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <h4>Produção de Imagens com Pagamento em Duplicidade</h4>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Empreendimentos onde a MDNE contratou outro fornecedor que não entregou no prazo — e a NMD.NU executou o trabalho dentro do tempo necessário, gerando sobreposição de custo para o cliente:</p>
+          <table class="dt" style="font-size:11px">
+            <thead><tr><th>Empreendimento</th><th class="num">NMD.NU (R$)</th><th class="num">Fornecedor (R$)</th></tr></thead>
+            <tbody>
+              <tr><td>Beach Class Milagres</td><td class="num">50.000</td><td class="num">160.000</td></tr>
+              <tr><td>Beach Class Bahia</td><td class="num">50.000</td><td class="num">100.000 <span style="color:var(--muted);font-size:10px">*só imagens</span></td></tr>
+              <tr><td>MD Plaza</td><td class="num">50.000</td><td class="num">460.000</td></tr>
+              <tr><td>Beach Class Macedo</td><td class="num">50.000</td><td class="num">400.000</td></tr>
+              <tr><td>Beach Class Essence</td><td class="num">50.000</td><td class="num">400.000</td></tr>
+              <tr><td>Beach Class João Pessoa</td><td class="num">50.000</td><td class="num">150.000</td></tr>
+              <tr><td>Infinity Business</td><td class="num">25.000</td><td class="num">300.000</td></tr>
+              <tr class="total"><td>Total</td><td class="num">325.000</td><td class="num">1.970.000</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Produtos com Baixo VSO</h4>
+          <p style="font-size:12px;color:var(--cream);line-height:1.65;margin-bottom:10px">É natural que uma carteira de produtos tenha empreendimentos com velocidades de venda distintas — alguns vendem com facilidade, outros exigem esforço e investimento além do esperado. Produtos com baixo VSO demandam mais campanha, mais material, mais ativação e mais tempo de equipe.</p>
+          <p style="font-size:12px;color:var(--cream);line-height:1.65;margin-bottom:10px">O ponto crítico ocorre especialmente na modalidade de <strong style="color:var(--gold)">condomínio fechado</strong> ou quando a incorporação avança lentamente: o enxoval de marketing é aberto e os custos crescem de forma desproporcional para as agências, que continuam entregando sem que o contrato preveja essa extensão de escopo.</p>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:6px">Exemplos de produtos nessa situação:</p>
+          <ul style="padding-left:14px">
+            <li style="font-size:12px;color:var(--cream);margin-bottom:4px">Mood Aurora</li>
+            <li style="font-size:12px;color:var(--cream);margin-bottom:4px">Eleve</li>
+            <li style="font-size:12px;color:var(--cream);margin-bottom:4px">Florata</li>
+            <li style="font-size:11px;color:var(--muted);font-style:italic">entre outros</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Variável para Performance Digital</h4>
+          <p style="font-size:12px;color:var(--cream);line-height:1.65">A NMD.NU <strong style="color:var(--gold)">não cobra variável de vendas</strong> no lançamento de produtos de incorporação — modalidade que concentra sobretudo as marcas <strong style="color:var(--cream)">Mood</strong> e <strong style="color:var(--cream)">Un1ca</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TRADE ══════════════════════════════════════ -->
+    <div class="tab" id="tab-trade">
+      <h2 class="page-title">Trade <span class="small">R$3.913.393</span></h2>
+      <p class="page-subtitle">Trade marketing por praça</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Trade marketing atua na interface entre marketing e vendas: materiais no ponto de venda, treinamento de corretores, kits de relacionamento com imobiliárias parceiras, eventos de lançamento e ativações regionais. O foco é aumentar a eficiência do canal de distribuição (brokers, imobiliárias) e garantir que o produto seja bem apresentado em todos os pontos de contato.</p>
+        <p>A distribuição geográfica dos investimentos de trade deve refletir o potencial de vendas por praça e o tamanho do canal local. Praças com maior concentração de imobiliárias parceiras justificam investimentos mais elevados.</p>
+      </div>
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Bônus Acelera</span><span class="dt-head-total">R$3.913.393</span></div>
+        <table class="dt">
+          <thead><tr><th>Praça</th><th class="num">Valor (R$)</th></tr></thead>
+          <tbody>
+            <tr><td>Fortaleza</td><td class="num">1.354.805,00</td></tr>
+            <tr><td>Recife</td><td class="num">1.510.088,00</td></tr>
+            <tr><td>Bahia</td><td class="num">573.739,00</td></tr>
+            <tr><td>Alagoas</td><td class="num">177.990,00</td></tr>
+            <tr><td>Paraíba</td><td class="num">94.836,00</td></tr>
+            <tr><td>Rio Grande do Norte</td><td class="num">137.680,00</td></tr>
+            <tr><td>Sergipe</td><td class="num">64.252,00</td></tr>
+            <tr class="total"><td>Total</td><td class="num">3.913.390,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Fee Mensal NMD.NU — Trade</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2025 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$16.339</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">antes do reajuste</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2026 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$17.199</div>
+            <div style="font-size:10px;color:var(--green);margin-top:4px">+5% vs 2025</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Custo por Peça — 2026</div>
+            <div style="font-size:22px;font-weight:700;color:var(--blue);line-height:1">R$84,31</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">~204 peças / mês</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">Era R$56,73 / peça em 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Volume de Peças — Trade</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+            <div style="font-size:26px;font-weight:700;color:var(--cream);line-height:1">3.451</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">~288 peças / mês</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+            <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">817</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">~204 peças / mês</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MDVENDAS ══════════════════════════════════ -->
+    <div class="tab" id="tab-mdvendas">
+      <h2 class="page-title">MDVendas <span class="small">Dados Parciais</span></h2>
+      <p class="page-subtitle">Apoio estratégico à imobiliária interna da Moura Dubeux</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>A NMD.NU é apoio estratégico para a imobiliária interna da Moura Dubeux — o principal canal de vendas da companhia. Desenvolvemos estratégias, apresentações, campanhas de captação de corretores, programa de incentivos, UX dos sistemas, roteiros, fluxos de cadência, conteúdo para redes sociais, materiais para eventos, entre diversos outros trabalhos.</p>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Fee Mensal NMD.NU — MDVendas</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2025 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$10.893</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">antes do reajuste</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2026 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$11.466</div>
+            <div style="font-size:10px;color:var(--green);margin-top:4px">+5% vs 2025</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Custo por Peça — 2026</div>
+            <div style="font-size:22px;font-weight:700;color:var(--blue);line-height:1">R$347,45</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">~33 peças / mês</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">Era R$279,31 / peça em 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Volume de Peças — MDVendas</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+              <div style="font-size:26px;font-weight:700;color:var(--cream);line-height:1">468</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">~39 peças / mês</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+              <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">131</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">~33 peças / mês</div>
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          <h4>Bi-tributação — Comparativo</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+              <div style="font-size:26px;font-weight:700;color:var(--red);line-height:1">R$23.030</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+              <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">R$16.000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONTEÚDO ══════════════════════════════════ -->
+    <div class="tab" id="tab-conteudo">
+      <h2 class="page-title">Conteúdo <span class="small">Dados Parciais</span></h2>
+      <p class="page-subtitle">Produção de conteúdo orgânico e editorial</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Conteúdo engloba a produção editorial para canais próprios: redes sociais, blog, e-mail marketing e WhatsApp. Inclui criação de copy, design de posts, reels, stories e qualquer formato orgânico. O objetivo é construir audiência qualificada, nutrir leads e fortalecer o posicionamento da marca no dia a dia.</p>
+        <p>Conteúdo orgânico tem custo fixo e geração contínua de valor — um bom post pode gerar tráfego por meses.</p>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Fee Mensal NMD.NU — Conteúdo</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2025 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$43.571</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">antes do reajuste</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2026 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$45.864</div>
+            <div style="font-size:10px;color:var(--green);margin-top:4px">+5% vs 2025</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Custo por Peça — 2026</div>
+            <div style="font-size:22px;font-weight:700;color:var(--blue);line-height:1">R$175,73</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">~261 peças / mês</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">Era R$206,50 / peça em 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Volume de Peças — Conteúdo</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+            <div style="font-size:26px;font-weight:700;color:var(--cream);line-height:1">2.529</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">~211 peças / mês</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+            <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">1.042</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">~261 peças / mês</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ INBOUND ════════════════════════════════════ -->
+    <div class="tab" id="tab-inbound">
+      <h2 class="page-title">Inbound <span class="small">Dados Parciais</span></h2>
+      <p class="page-subtitle">Marketing de atração e nutrição de leads</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Inbound Marketing concentra as estratégias de atração orgânica: SEO, marketing de conteúdo, landing pages, fluxos de nutrição por e-mail e automações de relacionamento. O objetivo é capturar leads qualificados com menor custo por aquisição do que a mídia paga.</p>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Fee Mensal NMD.NU — Inbound</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2025 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$29.925</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">antes do reajuste</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">2026 — Fee Mensal</div>
+            <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$31.500</div>
+            <div style="font-size:10px;color:var(--green);margin-top:4px">+5% vs 2025</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Custo por Peça — 2026</div>
+            <div style="font-size:22px;font-weight:700;color:var(--blue);line-height:1">R$338,71</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">~93 peças / mês</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:2px">Era R$332,50 / peça em 2025</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-bottom:24px">
+        <h4>Volume de Peças — Inbound</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+            <div style="font-size:26px;font-weight:700;color:var(--cream);line-height:1">1.084</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">~90 peças / mês</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+            <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">371</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">~93 peças / mês</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PERFORMANCE ════════════════════════════════ -->
+    <div class="tab" id="tab-performance">
+      <h2 class="page-title">Performance</h2>
+      <p class="page-subtitle">Leads, vendas e métricas de retorno — 2025 e 2026</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Performance é o pilar de maior retorno mensurável da operação. Engloba toda a mídia paga com foco em geração de leads qualificados: Meta Ads, Google Ads, campanhas de retargeting e canais de conversão direta. Os resultados são acompanhados por métricas proprietárias criadas pela MD/NMD.NU — como o ROI específico, onde abaixo de 1 é o ideal — além das métricas tradicionais de mercado (CPL, ROAS, CAC).</p>
+        <p>Em 2022 a meta era superar 3.000 leads por mês. Em 2025 a operação entregou <strong style="color:var(--green)">9.018 leads/mês em média</strong> — 3x acima daquela meta. Em 2026 a média já chegou a <strong style="color:var(--green)">10.375 leads/mês</strong>.</p>
+      </div>
+
+      <p class="section-title gold">Leads</p>
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Leads 2025 — Ano Completo</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Total</div>
+              <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">108.219</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Média / mês</div>
+              <div style="font-size:22px;font-weight:700;color:var(--green);line-height:1">9.018</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">CPL Médio</div>
+              <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$55</div>
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          <h4>Leads 2026 — 1º Quadrimestre</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Total</div>
+              <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">41.502</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Média / mês</div>
+              <div style="font-size:22px;font-weight:700;color:var(--green);line-height:1">10.375</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">CPL Médio</div>
+              <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">R$43</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-title gold">Vendas</p>
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Vendas 2025 — Ano Completo</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Total</div>
+              <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$586M</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Média / mês</div>
+              <div style="font-size:22px;font-weight:700;color:var(--green);line-height:1">R$48,8M</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">ROAS</div>
+              <div style="font-size:22px;font-weight:700;color:var(--gold);line-height:1">110x</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">CAC / CPV</div>
+              <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$7.805</div>
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          <h4>Vendas 2026 — Primeiros 3 Meses</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Total</div>
+              <div style="font-size:22px;font-weight:700;color:var(--cream);line-height:1">R$133M</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Média / mês</div>
+              <div style="font-size:22px;font-weight:700;color:var(--green);line-height:1">R$44M</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="section-title gold">ROI Específico — Métrica MD / NMD.NU</p>
+      <div class="racional">
+        <h3>Como funciona</h3>
+        <p>Métrica proprietária criada pela MD e NMD.NU onde <strong style="color:var(--green)">abaixo de 1 é o resultado ideal</strong> — indica que o investimento em marketing é proporcional (ou menor) ao retorno gerado em vendas. Quanto menor o índice, mais eficiente a operação.</p>
+      </div>
+      <div class="three-col">
+        <div class="info-box" style="text-align:center">
+          <h4>ROI MD</h4>
+          <div style="font-size:32px;font-weight:700;color:var(--green);margin-top:10px">0,83</div>
+          <div style="font-size:10px;color:var(--green);margin-top:4px">Abaixo de 1 ✓</div>
+        </div>
+        <div class="info-box" style="text-align:center">
+          <h4>ROI Mood</h4>
+          <div style="font-size:32px;font-weight:700;color:var(--gold);margin-top:10px">1,27</div>
+          <div style="font-size:10px;color:var(--gold);margin-top:4px">Acima de 1 — oportunidade</div>
+        </div>
+        <div class="info-box" style="text-align:center">
+          <h4>ROI Médio</h4>
+          <div style="font-size:32px;font-weight:700;color:var(--green);margin-top:10px">0,91</div>
+          <div style="font-size:10px;color:var(--green);margin-top:4px">Abaixo de 1 ✓</div>
+        </div>
+      </div>
+
+      <p class="section-title gold">Destaques 2025</p>
+      <div class="info-box">
+        <h4>Principais Conquistas do Ano</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="color:var(--green);font-size:16px;line-height:1;flex-shrink:0">↑</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--cream)">Ticket médio: R$928K</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Crescimento expressivo no valor por venda</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="color:var(--green);font-size:16px;line-height:1;flex-shrink:0">↑</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--cream)">R$45M em Oferta Ativa</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Canal de vendas ativo com resultado relevante</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="color:var(--green);font-size:16px;line-height:1;flex-shrink:0">↑</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--cream)">+R$105M em vendas (+24%)</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Crescimento real de volume no período</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="color:var(--green);font-size:16px;line-height:1;flex-shrink:0">↑</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--cream)">+53% em volume de leads</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Crescimento consistente no topo do funil</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top:24px">
+        <h4>Variável para Performance Digital</h4>
+        <p style="font-size:12px;color:var(--cream);line-height:1.65">A NMD.NU <strong style="color:var(--gold)">não cobra variável de vendas</strong> no lançamento de produtos de incorporação — modalidade que concentra sobretudo as marcas <strong style="color:var(--cream)">Mood</strong> e <strong style="color:var(--cream)">Un1ca</strong>.</p>
+      </div>
+    </div>
+
+    <!-- ══ AGÊNCIA ════════════════════════════════════ -->
+    <div class="tab" id="tab-agencia">
+      <h2 class="page-title">Agência <span class="small">R$5.368.637</span></h2>
+      <p class="page-subtitle">Remuneração NMD.NU + benchmark de mercado</p>
+
+      <div class="racional">
+        <h3>Racional do Pilar — Remuneração da Agência</h3>
+        <p>A remuneração de uma agência de marketing imobiliário deve refletir o escopo real de trabalho: volume de praças atendidas, número de empreendimentos, entregas simultâneas e nível de integração com o time interno do cliente. Modelos inadequados (fee fixo independente de escopo, comissionamento sobre mídia) criam incentivos desalinhados.</p>
+        <p>O modelo adotado pela NMD.NU é orientado por entrega e escopo — não há comissionamento sobre verba de mídia, o que garante isenção nas recomendações de canais. A remuneração é dividida por tipo de serviço (<strong style="color:var(--cream)">Institucional, Produto, Trade, MDVendas, Conteúdo &amp; Peças Performance, Inbound e Performance</strong>), permitindo rastreabilidade e revisão periódica de cada frente.</p>
+        <p>O benchmark com agências concorrentes demonstra que a NMD.NU opera com fee abaixo da média de mercado para o escopo entregue. A diferença não representa subvalor — representa eficiência operacional conquistada com escala e especialização no segmento imobiliário nordestino.</p>
+      </div>
+
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Remuneração NMD.NU por Serviço</span><span class="dt-head-total">R$5.368.637</span></div>
+        <table class="dt">
+          <thead><tr><th>Serviço</th><th>Modelo</th><th class="num">Valor / Condição</th></tr></thead>
+          <tbody>
+            <tr class="section-head"><td colspan="3">Institucional</td></tr>
+            <tr class="sub"><td>Moura Dubeux</td><td>Fee mensal</td><td class="num">R$77.968,80</td></tr>
+            <tr class="sub"><td>Mood</td><td>Fee mensal</td><td class="num">R$21.840,00</td></tr>
+            <tr class="sub"><td>Un1ca</td><td>Fee mensal</td><td class="num">R$10.000,00</td></tr>
+            <tr class="section-head"><td colspan="3">Produto</td></tr>
+            <tr class="sub"><td>Condomínio Fechado</td><td>Valor fixo por lançamento</td><td class="num">R$50.000,00</td></tr>
+            <tr class="sub"><td>Incorporação Moura Dubeux</td><td>% do VGV</td><td class="num">0,20%</td></tr>
+            <tr class="sub"><td>Incorporação Mood</td><td>% do VGV</td><td class="num">0,12%</td></tr>
+            <tr class="sub"><td>Incorporação Un1ca</td><td>% do VGV</td><td class="num">0,08%</td></tr>
+            <tr class="section-head"><td colspan="3">Demais Serviços</td></tr>
+            <tr><td>Trade</td><td>Fee mensal</td><td class="num">R$17.199,00</td></tr>
+            <tr><td>MD Vendas</td><td>Fee mensal</td><td class="num">R$11.466,00</td></tr>
+            <tr><td>Conteúdo e Peças Performance</td><td>Fee mensal</td><td class="num">R$45.864,00</td></tr>
+            <tr><td>Inbound</td><td>Fee mensal</td><td class="num">R$31.500,00</td></tr>
+            <tr class="section-head"><td colspan="3">Performance</td></tr>
+            <tr class="sub"><td>Produtos lançados pela NMD.NU</td><td>Variável de vendas</td><td class="num">0%</td></tr>
+            <tr class="sub"><td>Produtos não lançados pela NMD.NU</td><td>% do VGV</td><td class="num">0,20%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="section-title gold" style="margin-top: 8px;">Benchmark — Concorrentes de Mercado</p>
+      <div class="racional">
+        <h3>Racional do Benchmark</h3>
+        <p>Este é um benchmark exclusivamente de agências especializadas em lançamentos imobiliários. Todas as agências listadas operam com escopo muito bem definido e limite de peças estabelecido em contrato — mesmo as que possuem remuneração variável ao longo do tempo têm limites claros e previamente acordados.</p>
+        <p>O racional para manter a NMD.NU como agência principal é: especialização setorial comprovada, curva de aprendizado já construída, equipe dedicada ao cliente e ausência de conflito de interesse (sem comissionamento de mídia).</p>
+      </div>
+      <div class="dt-wrap">
+        <div class="dt-head"><span class="dt-head-title">Benchmark de Agências</span><span class="dt-head-total">Mercado · 2025</span></div>
+        <table class="dt">
+          <thead><tr><th>Praça</th><th>Incorporadora</th><th>Agência</th><th>Remuneração</th><th>Escopo / Observação</th></tr></thead>
+          <tbody>
+            <tr><td>Salvador-BA</td><td>LPL</td><td>Engenho Novo</td><td>R$75k start + 0,3% VGV</td><td>Sem digital</td></tr>
+            <tr><td>Salvador-BA</td><td>PRIMA</td><td>Play Grow</td><td>R$50k start + 0,2% VGV</td><td>Sem digital</td></tr>
+            <tr><td>Salvador-BA</td><td>COSBAT</td><td>—</td><td>0,25% VGV</td><td>Sem digital</td></tr>
+            <tr><td>Recife-PE</td><td>Pernambuco Construtora</td><td>Consultor + Caju + Play Grow</td><td>R$80k + 0,2% VGV</td><td>Enxoval limitado, sem digital</td></tr>
+            <tr><td>Recife-PE</td><td>Rio Ave</td><td>Vivare</td><td>R$250k</td><td>Enxoval limitado</td></tr>
+            <tr><td>Recife-PE</td><td>Max Plural</td><td>Lean</td><td>R$15k start + R$15k/mês (R$195k/lançamento)</td><td>Sem digital</td></tr>
+            <tr><td>Fortaleza-CE</td><td>BSPAR</td><td>—</td><td>R$15k start + R$15k/mês (R$195k/lançamento)</td><td>Enxoval limitado, sem digital</td></tr>
+            <tr><td>Fortaleza-CE</td><td>Mota Machado</td><td>—</td><td>R$15k start + R$15k/mês (R$75k/lançamento · 3 lançamentos/ano)</td><td>Enxoval limitado, sem digital</td></tr>
+            <tr><td>João Pessoa-PB</td><td>Aliance</td><td>Bairro Novo + Tag</td><td>R$40k + variável 0,?% VGV</td><td>Enxoval limitado, sem digital</td></tr>
+            <tr><td>São Paulo-SP</td><td>Sá Cavalcante</td><td>Tech Soul</td><td>R$906k start + 0,3% + 10% prod + 10% mídia</td><td>Sem digital</td></tr>
+            <tr><td>Vitória-ES</td><td>Sá Cavalcante</td><td>Personali</td><td>R$100k start + 0,3% + 0,10% sucesso</td><td>Enxoval limitado, sem digital</td></tr>
+            <tr><td>Vitória-ES</td><td>Sá Cavalcante</td><td>Leaf</td><td>R$58.400 start + R$48k/mês</td><td>Sem digital</td></tr>
+            <tr><td>Goiânia-GO</td><td>Sá Cavalcante</td><td>Lucid</td><td>R$210k</td><td>Enxoval limitado, sem digital</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="racional">
+        <h3>Por que a NMD cobra menos e entrega mais?</h3>
+        <p>A NMD possui estrutura robusta e custos fixos elevados — o escritório é referência na região. A diferença está no modelo: a operação é verticalizada, o que gera ganho de escala em várias pontas e reduz o custo final ao cliente, sem comprometer a qualidade.</p>
+        <ul>
+          <li><strong>Operação verticalizada:</strong> ao internalizar diversas frentes que outras agências terceirizam, a NMD ganha eficiência em múltiplas pontas e repassa isso no preço.</li>
+          <li><strong>Especialização imobiliária:</strong> a NMD atua em diversos mercados, mas tem forte domínio e especialização no setor imobiliário — processos, ferramentas e linguagem construídos ao longo de anos nesse segmento.</li>
+          <li><strong>Escala por cliente:</strong> ao atender um cliente de alta complexidade com profundidade, a NMD elimina retrabalho e reduz o custo por entrega.</li>
+          <li><strong>Sem comissão de mídia:</strong> a maioria das agências cobra de 10% a 17,65% sobre verba de mídia como remuneração oculta. A NMD não pratica isso — o fee é transparente.</li>
+          <li><strong>Time dedicado:</strong> equipe exclusivamente alocada ao MDNE, sem conflito de agenda com outros clientes.</li>
+          <li><strong>Agências abaixo da NMD:</strong> têm escopo reduzido, sem atender todas as praças ou sem capacidade full service — não são comparáveis ao nível de entrega atual.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ══ AUDIOVISUAL ════════════════════════════════ -->
+    <div class="tab" id="tab-audiovisual">
+      <h2 class="page-title">Audiovisual <span class="small">R$1.074.213</span></h2>
+      <p class="page-subtitle">Sub-item do Pilar Produto · Produtora interna NMD.NU</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>A NMD.NU conta com uma <strong style="color:var(--gold)">produtora interna dedicada</strong> ao atendimento da Moura Dubeux, verticalizando toda a operação audiovisual. O espectro de entrega vai desde produções do dia a dia — cartelados e captações simples — até fotos e vídeos complexos com inteligência artificial, sendo referência nacional em produção audiovisual com IA, e ainda produções complexas com câmera aberta para lançamentos e campanhas institucionais.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Investimento Audiovisual — 2025 vs 2026</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px">
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2025 — Ano completo</div>
+              <div style="font-size:26px;font-weight:700;color:var(--cream);line-height:1">R$1.074.213</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">2026 — 1º Quadrimestre</div>
+              <div style="font-size:26px;font-weight:700;color:var(--gold);line-height:1">R$325.502</div>
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          <h4>Otimização de Custo para a MDNE</h4>
+          <p style="font-size:12px;color:var(--cream);line-height:1.65">A NMD.NU <strong style="color:var(--gold)">não cobra direito de uso</strong> dos vídeos e fotos produzidos para a MDNE. Em produções contratadas no mercado, o licenciamento de uso é um custo adicional expressivo — cobrado por período, por praça ou por canal de veiculação.</p>
+          <p style="font-size:12px;color:var(--cream);line-height:1.65;margin-top:8px">Com a produtora interna, todo o material produzido pertence à MDNE sem qualquer restrição ou cobrança adicional — uma economia e praticidade enormes ao longo de toda a vida útil do conteúdo.</p>
+        </div>
+      </div>
+
+      <div class="dt-wrap" style="margin-top:24px">
+        <div class="dt-head"><span class="dt-head-title">Projetos Principais NMD.NU</span><span class="dt-head-total">R$806.233,00</span></div>
+        <table class="dt">
+          <thead><tr><th>Projeto</th><th class="num">Valor (R$)</th></tr></thead>
+          <tbody>
+            <tr><td>Infinity Recife</td><td class="num">209.700,00</td></tr>
+            <tr><td>The One Paiva</td><td class="num">142.405,00</td></tr>
+            <tr><td>Quadra Macedo</td><td class="num">155.000,00</td></tr>
+            <tr><td>Farol Boulevard</td><td class="num">108.000,00</td></tr>
+            <tr><td>Mood Mila</td><td class="num">96.000,00</td></tr>
+            <tr><td>Conferência de Líderes</td><td class="num">55.000,00</td></tr>
+            <tr><td>Casinhas</td><td class="num">40.128,20</td></tr>
+            <tr class="total"><td>Total</td><td class="num">806.233,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ MÍDIA ══════════════════════════════════════ -->
+    <div class="tab" id="tab-midia">
+      <h2 class="page-title">Mídia</h2>
+      <p class="page-subtitle">Investimento em mídia paga por canal e praça</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Mídia engloba o investimento em canais pagos de comunicação para campanhas de marca e geração de demanda.</p>
+      </div>
+
+      <p class="section-title gold">Ranking por Meio — Excluindo Digital Google/Meta</p>
+      <div class="two-col">
+        <div class="dt-wrap" style="margin-bottom:0">
+          <div class="dt-head"><span class="dt-head-title">2025 — Ano completo</span><span class="dt-head-total">R$4.072.110,90</span></div>
+          <table class="dt">
+            <thead><tr><th>Meio</th><th class="num">Valor (R$)</th></tr></thead>
+            <tbody>
+              <tr><td>Mídia Externa</td><td class="num">1.199.454,71</td></tr>
+              <tr><td>Televisão</td><td class="num">694.789,88</td></tr>
+              <tr><td>Jornal</td><td class="num">595.837,23</td></tr>
+              <tr><td>Outdoor</td><td class="num">547.437,44</td></tr>
+              <tr><td>Rádio</td><td class="num">426.219,62</td></tr>
+              <tr><td>Internet display e outros</td><td class="num">234.676,02</td></tr>
+              <tr><td>Mídia Alternativa</td><td class="num">151.160,00</td></tr>
+              <tr><td>Revista</td><td class="num">112.920,00</td></tr>
+              <tr><td>Outros</td><td class="num">84.080,00</td></tr>
+              <tr><td>Rádio FM</td><td class="num">25.536,00</td></tr>
+              <tr class="total"><td>Total</td><td class="num">4.072.110,90</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="dt-wrap" style="margin-bottom:0">
+          <div class="dt-head"><span class="dt-head-title">2026 — 1º Quadrimestre</span><span class="dt-head-total">R$2.073.903,92</span></div>
+          <table class="dt">
+            <thead><tr><th>Meio</th><th class="num">Valor (R$)</th></tr></thead>
+            <tbody>
+              <tr><td>Mídia Externa</td><td class="num">1.205.577,33</td></tr>
+              <tr><td>Televisão</td><td class="num">341.681,24</td></tr>
+              <tr><td>Rádio</td><td class="num">217.259,77</td></tr>
+              <tr><td>Jornal</td><td class="num">164.912,78</td></tr>
+              <tr><td>Internet display e outros</td><td class="num">74.600,00</td></tr>
+              <tr><td>Televisão por assinatura</td><td class="num">38.000,00</td></tr>
+              <tr><td>Rádio FM</td><td class="num">26.272,80</td></tr>
+              <tr><td>Revista</td><td class="num">5.600,00</td></tr>
+              <tr class="total"><td>Total</td><td class="num">2.073.903,92</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SINALIZAÇÃO / GRÁFICA ══════════════════════ -->
+    <div class="tab" id="tab-sinalizacaografica">
+      <h2 class="page-title">Sinalização / Gráfica / Outros</h2>
+
+      <p class="section-title gold">Sinalização / Gráfica / Outros</p>
+      <div class="racional">
+        <h3>Racional do Pilar</h3>
+        <p>Investimento em fornecedores para produção de comunicação visual e materiais gráficos.</p>
+      </div>
+      <div class="two-col">
+        <div class="info-box">
+          <h4>Comparativo 2025 vs 2026</h4>
+          <p>O investimento em sinalização tende a crescer proporcionalmente ao número de empreendimentos em obra simultânea. O planejamento 2026 deve considerar o pipeline de lançamentos e a necessidade de renovação de sinalização para obras em andamento.</p>
+        </div>
+        <div class="info-box">
+          <h4>Principais Materiais Produzidos</h4>
+          <ul>
+            <li>Tapumes</li>
+            <li>Sinalização</li>
+            <li>Books</li>
+            <li>Outros materiais impressos</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:24px">
+        <div class="dt-wrap" style="margin-bottom:0">
+          <div class="dt-head"><span class="dt-head-title">Ranking Fornecedores 2025</span><span class="dt-head-total">R$12.661.025,80</span></div>
+          <table class="dt">
+            <thead><tr><th>Fornecedor</th><th class="num">Valor (R$)</th></tr></thead>
+            <tbody>
+              <tr><td>FOR PRINT</td><td class="num">1.078.895,74</td></tr>
+              <tr><td>FAC FORM</td><td class="num">911.537,50</td></tr>
+              <tr><td>LAMP PRODUÇÕES</td><td class="num">544.398,60</td></tr>
+              <tr><td>PERSONAL BRINDES 03.618.689/0001-00</td><td class="num">511.945,30</td></tr>
+              <tr><td>NO CASO MILA</td><td class="num">406.000,00</td></tr>
+              <tr><td>EDUARDO FRADE FILM</td><td class="num">380.642,00</td></tr>
+              <tr><td>GRAFICA J B LTDA - 08.540.403/0001-35</td><td class="num">279.678,02</td></tr>
+              <tr><td>DALE COMUNICACAO LTDA</td><td class="num">264.729,79</td></tr>
+              <tr><td>FORMA PROPAGANDA E ESTAMPARIA</td><td class="num">232.868,87</td></tr>
+              <tr><td>LUMINANCE</td><td class="num">218.166,00</td></tr>
+              <tr><td>G2 SOLUCOES EM EVENTOS</td><td class="num">194.500,00</td></tr>
+              <tr><td>RESTAURANTE BLUNELLE RECIFE</td><td class="num">176.430,00</td></tr>
+              <tr><td>CASA BRANCA BUFFET</td><td class="num">161.171,50</td></tr>
+              <tr><td>41.600.944 RICARDO EUGENIO SAMICO ROCHA FERNANDES</td><td class="num">125.204,00</td></tr>
+              <tr><td>MULTIPACK ACABAMENTOS ESPECIAIS</td><td class="num">114.669,50</td></tr>
+              <tr><td>BANDEIRANTES (Olinda) - 11.271.475/0001-39</td><td class="num">107.100,00</td></tr>
+              <tr><td>IMPACTO PROMOCOES E EVENTOS</td><td class="num">106.303,79</td></tr>
+              <tr><td>JCJ IMPRESSAO DIGITAL</td><td class="num">94.070,00</td></tr>
+              <tr><td>PRONTO PLACAS</td><td class="num">86.342,00</td></tr>
+              <tr><td>SUPERLUX OUTDOOR - 13.011.051/0001-60</td><td class="num">84.550,00</td></tr>
+              <tr><td>EU VI COMUNICACAO VISUAL</td><td class="num">75.000,00</td></tr>
+              <tr><td>NOMADE COMUNICACAO 40.583.993/0001-96</td><td class="num">70.625,00</td></tr>
+              <tr><td>VILLA 7</td><td class="num">63.330,00</td></tr>
+              <tr><td>SOL PULQUERIO FOTOGRAFIA - 16.633.353.0001-69</td><td class="num">58.200,00</td></tr>
+              <tr><td>ARCADIA BUFFET</td><td class="num">55.080,00</td></tr>
+              <tr><td>GERAMAIS</td><td class="num">54.900,00</td></tr>
+              <tr><td>A' MACARONS</td><td class="num">54.200,00</td></tr>
+              <tr class="total"><td>Total</td><td class="num">12.661.025,80</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="dt-wrap" style="margin-bottom:0">
+          <div class="dt-head"><span class="dt-head-title">Ranking Fornecedores 2026</span><span class="dt-head-total">R$6.979.380,82</span></div>
+          <table class="dt">
+            <thead><tr><th>Fornecedor</th><th class="num">Valor (R$)</th></tr></thead>
+            <tbody>
+              <tr><td>FOR PRINT</td><td class="num">972.837,45</td></tr>
+              <tr><td>51.837.999 FERNANDA COSTA DE SANT ANNA TUDE DE SA</td><td class="num">394.416,00</td></tr>
+              <tr><td>FAC FORM</td><td class="num">213.239,22</td></tr>
+              <tr><td>MULTIPACK ACABAMENTOS ESPECIAIS</td><td class="num">212.590,02</td></tr>
+              <tr><td>GRAFICA J B LTDA - 08.540.403/0001-35</td><td class="num">153.316,60</td></tr>
+              <tr><td>41.600.944 RICARDO EUGENIO SAMICO ROCHA FERNANDES</td><td class="num">146.100,00</td></tr>
+              <tr><td>RB COMERCIO E ATACADO DE ALIMENTOS E BEBIDAS LTDA</td><td class="num">107.748,75</td></tr>
+              <tr><td>DALE COMUNICACAO LTDA</td><td class="num">104.291,18</td></tr>
+              <tr><td>GRUPO LCP</td><td class="num">100.500,00</td></tr>
+              <tr><td>BANDEIRANTES (Olinda) - 11.271.475/0001-39</td><td class="num">97.900,00</td></tr>
+              <tr><td>LAMP PRODUÇÕES</td><td class="num">95.380,00</td></tr>
+              <tr><td>PEDRO CAIO RIBEIRO</td><td class="num">72.526,80</td></tr>
+              <tr><td>GRAFMARQUES</td><td class="num">52.737,00</td></tr>
+              <tr><td>PERSONAL BRINDES 03.618.689/0001-00</td><td class="num">52.327,60</td></tr>
+              <tr><td>VILLA 7</td><td class="num">47.194,00</td></tr>
+              <tr><td>DLP</td><td class="num">44.518,81</td></tr>
+              <tr><td>AJALUX</td><td class="num">36.000,00</td></tr>
+              <tr><td>MXM GRÁFICA EDITORA (00.758.606/0001-90)</td><td class="num">25.025,00</td></tr>
+              <tr><td>BANDEIRANTES EXTERNA</td><td class="num">23.500,00</td></tr>
+              <tr><td>Guajiro</td><td class="num">22.000,00</td></tr>
+              <tr><td>TV GLOBO RJ</td><td class="num">20.372,86</td></tr>
+              <tr><td>56.421.137 CARLOS EDUARDO ARAUJO DA COSTA</td><td class="num">19.500,00</td></tr>
+              <tr><td>VIA PAINEL</td><td class="num">19.200,00</td></tr>
+              <tr><td>SUPERLUX OUTDOOR - 13.011.051/0001-60</td><td class="num">18.480,00</td></tr>
+              <tr><td>KRONOS COMUNICAÇÃO E MARKETING</td><td class="num">18.000,00</td></tr>
+              <tr><td>BONJOUR FLORES</td><td class="num">17.527,11</td></tr>
+              <tr class="total"><td>Total</td><td class="num">6.979.380,82</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ ANÁLISE INTERNA ══════════════════════════════ -->
+    <div class="tab" id="tab-analise">
+      <h2 class="page-title">Análise Interna <span class="small" style="color:var(--muted);font-size:12px">Uso restrito</span></h2>
+      <p class="page-subtitle">Leitura independente sobre os custos e a remuneração da NMD.NU</p>
+
+      <div class="racional">
+        <h3>Contexto da Análise</h3>
+        <p>Esta análise foi produzida com base exclusivamente nos dados mapeados neste dashboard — 2025 completo e 1º Quadrimestre de 2026. Os pilares cobertos são: PDV, Mídia, Sinalização/Gráfica/Outros, Agência, Trade, Audiovisual, Institucional, Sistemas e parcialmente MDVendas, Conteúdo, Inbound e Performance. Não há acesso a contratos, DRE ou dados de VGV por empreendimento, o que limita algumas projeções. Ainda assim, os padrões visíveis são suficientes para apontar oportunidades concretas e fazer uma leitura honesta sobre a remuneração da NMD.NU.</p>
+      </div>
+
+      <p class="section-title gold">Oportunidades de Redução de Custo</p>
+
+      <div class="racional">
+        <h3>1 · Sinalização / Gráfica / Outros — maior pilar, base de fornecedores pulverizada</h3>
+        <p>Com R$19,6M consolidados (2025 + 1º Quadrimestre 2026), este é o maior pilar de custo de toda a operação — maior que o PDV. O dado mais revelador: são necessários <strong style="color:var(--gold)">24 fornecedores</strong> para atingir 50% do investimento de 2025. Trata-se de uma base altamente pulverizada, o que reduz drasticamente o poder de negociação e aumenta o custo operacional de gestão de contratos.</p>
+        <p>A oportunidade está nas categorias recorrentes e previsíveis — <strong style="color:var(--cream)">Tapumes, Sinalização, Books e materiais impressos</strong> — que se repetem a cada lançamento. Negociar contratos anuais com volume garantido nesses itens geraria saving relevante sem perda de qualidade ou agilidade. FOR PRINT e FAC FORM somam juntos ~R$2M em 2025 e seguem como maiores fornecedores em 2026 — são os candidatos naturais para negociação de volume.</p>
+      </div>
+
+      <div class="racional">
+        <h3>2 · Produção duplicada de imagens e vídeos — potencial de R$1,97M</h3>
+        <p>Em 7 empreendimentos, a MDNE contratou fornecedores externos que não entregaram no prazo — obrigando a NMD.NU a produzir o mesmo conteúdo para viabilizar o lançamento. O resultado: dois fornecedores pagos pelo mesmo trabalho.</p>
+        <div style="margin:12px 0;padding:12px 16px;background:var(--bg3);border-radius:6px;border-left:3px solid var(--red)">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Custo total dos 7 empreendimentos afetados</div>
+          <div style="display:flex;gap:32px">
+            <div><span style="font-size:18px;font-weight:700;color:var(--cream)">R$325.000</span><span style="font-size:11px;color:var(--muted);margin-left:6px">NMD.NU</span></div>
+            <div><span style="font-size:18px;font-weight:700;color:var(--red)">R$1.970.000</span><span style="font-size:11px;color:var(--muted);margin-left:6px">fornecedores externos</span></div>
+          </div>
+        </div>
+        <p>A NMD.NU já conta com produtora interna, entrega no prazo e a custo 6x menor. O problema não é de capacidade — é de processo de contratação. Contratos externos sem SLA e sem cláusula de penalidade por atraso não deveriam ser pagos quando a NMD.NU precisar refazer o trabalho.</p>
+      </div>
+
+      <div class="racional">
+        <h3>3 · Bi-tributação — saving real de ~R$146k em 2025</h3>
+        <p>O valor total identificado como bi-tributação em 2025 foi de R$733k (Institucional R$710k + MDVendas R$23k). No entanto, apenas <strong style="color:var(--gold)">~20% desse montante (~R$146k)</strong> corresponde de fato à bi-tributação — o custo que seria eliminado com a correção do processo. Os demais ~80% (~R$587k) referem-se a repasse de fornecedores, que não constitui desperdício eliminável da mesma forma. O saving real, portanto, é da ordem de R$146k. Vale destacar que a maior parte dos itens bi-tributados ocorreu no segundo semestre de 2025 — o que torna prematuro comparar o 1º Quadrimestre de 2026 com o ano anterior como indicador de melhora.</p>
+      </div>
+
+      <div class="racional">
+        <h3>4 · PDV — R$12,4M merece revisão praça a praça</h3>
+        <p>Segundo maior pilar de custo. A Casa MD PE - Riomar concentra R$4,58M sozinha (37% do total), dos quais R$3,5M são estruturais e tendem a ser não recorrentes. Os pontos de atenção operacional:</p>
+        <ul>
+          <li><strong>Casa MD AL: R$791k em Terceirizados</strong> — maior linha operacional de toda a tabela, expressivo em relação às demais praças.</li>
+          <li><strong>Casa MD BA: R$488k em Manutenção</strong> — quase 3x acima da média das demais casas.</li>
+          <li><strong>Revisão do footprint:</strong> com 9 PDVs ativos, o cruzamento entre custo por casa e VSO por praça é necessário — dados não disponíveis neste dashboard.</li>
+        </ul>
+      </div>
+
+      <div class="racional">
+        <h3>5 · Trade — Eficiência do Bônus Acelera por praça</h3>
+        <p>R$3,9M em Bônus Acelera distribuídos em 7 praças. Sem correlacionar o bônus com VSO e VGV vendido por praça, é impossível saber se a distribuição é eficiente. Sergipe (R$64k) e Paraíba (R$95k) são volumes marginais que merecem avaliação de retorno. Um painel de ROI por praça cruzando Trade com vendas por regional permitiria calibrar a alocação com base em resultado.</p>
+      </div>
+
+      <p class="section-title gold" style="margin-top:32px">Avaliação da Remuneração da NMD.NU</p>
+
+      <div class="racional">
+        <h3>Diagnóstico geral: o fee está abaixo do valor entregue</h3>
+        <p>A conclusão mais clara dos dados é que a NMD.NU cobra menos do que entrega. O benchmark confirma: todas as agências comparáveis cobram mais, com escopo menor, sem atender todas as praças e sem digital. O reajuste de 5% concedido no início de 2026 ficou abaixo da inflação (IPCA 2025 ~4,83%) e muito abaixo do crescimento de volume entregue.</p>
+        <div style="margin:12px 0;padding:12px 16px;background:var(--bg3);border-radius:6px;border-left:3px solid var(--gold)">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Crescimento de volume mensal de peças vs reajuste de fee — 2025 → 2026</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+            <div><div style="font-size:10px;color:var(--muted)">Institucional</div><div style="font-size:16px;font-weight:700;color:var(--red)">+43%</div><div style="font-size:10px;color:var(--muted)">volume</div></div>
+            <div><div style="font-size:10px;color:var(--muted)">Conteúdo</div><div style="font-size:16px;font-weight:700;color:var(--red)">+24%</div><div style="font-size:10px;color:var(--muted)">volume</div></div>
+            <div><div style="font-size:10px;color:var(--muted)">Inbound</div><div style="font-size:16px;font-weight:700;color:var(--red)">+3%</div><div style="font-size:10px;color:var(--muted)">volume</div></div>
+            <div><div style="font-size:10px;color:var(--muted)">Fee — todos</div><div style="font-size:16px;font-weight:700;color:var(--green)">+5%</div><div style="font-size:10px;color:var(--muted)">reajuste</div></div>
+          </div>
+        </div>
+        <p style="margin-top:10px">Vale destacar também o Audiovisual: a NMD.NU opera uma produtora interna completa — de cartelados e captações simples a produções com IA e câmera aberta — <strong style="color:var(--gold)">sem cobrar direito de uso</strong> do material produzido. Em qualquer outra produtora do mercado, o licenciamento é custo adicional expressivo cobrado por período, praça ou canal. Esse valor não está precificado no fee atual.</p>
+      </div>
+
+
+    </div><!-- /tab-analise -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+  const TITLES = {
+    home: 'Dashboard de Custos — Visão Geral',
+    equipe: 'Equipe — Headcount e Pessoal',
+    sistemas: 'Sistemas — Stack Tecnológica',
+    pdv: 'PDV — Pontos de Venda',
+    patrocinios: 'Patrocínios',
+    institucional: 'Institucional — Branding e Pesquisa',
+    produto: 'Produto — Produção e Mídia de Lançamento',
+    trade: 'Trade Marketing',
+    mdvendas: 'MDVendas',
+    conteudo: 'Conteúdo Orgânico',
+    inbound: 'Inbound Marketing',
+    performance: 'Performance — Mídia Paga',
+    agencia: 'Agência — NMD.NU e Benchmark',
+    audiovisual: 'Audiovisual',
+    midia: 'Mídia — Campanha Contínua',
+    sinalizacaografica: 'Sinalização / Gráfica / Outros',
+    analise: 'Análise Interna',
+  };
+
+  function go(id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick') === "go('" + id + "')") n.classList.add('active');
+    });
+    document.getElementById('topbar-title').textContent = TITLES[id] || id;
+  }
+
+  /* ── Home bars data ── */
+  const PILARES = [
+    { id: 'sinalizacaografica', name: 'Sinal./Grá/Out.', val: 19640407, status: 'ok' },
+    { id: 'pdv',           name: 'PDV',           val: 12393498, status: 'ok'   },
+    { id: 'midia',         name: 'Mídia',         val:  7783564, status: 'ok'   },
+    { id: 'agencia',       name: 'Agência',       val:  5368637, status: 'ok'   },
+    { id: 'trade',         name: 'Trade',         val:  3913390, status: 'ok'   },
+    { id: 'audiovisual',   name: 'Audiovisual',   val:  1074213, status: 'ok'   },
+    { id: 'institucional', name: 'Institucional', val:   670000, status: 'ok'   },
+    { id: 'sistemas',      name: 'Sistemas',      val:   196296, status: 'ok'   },
+    { id: 'mdvendas',      name: 'MDVendas',      val:        0, status: 'par'  },
+    { id: 'conteudo',      name: 'Conteúdo',      val:        0, status: 'par'  },
+    { id: 'inbound',       name: 'Inbound',       val:        0, status: 'par'  },
+    { id: 'equipe',        name: 'Equipe',        val:        0, status: 'pend' },
+    { id: 'patrocinios',   name: 'Patrocínios',   val:        0, status: 'pend' },
+    { id: 'performance',   name: 'Performance',   val:        0, status: 'pend' },
+  ];
+
+  const COLORS = { ok: '#4ecb8a', par: '#c9a84c', pend: '#444' };
+  const fmt = v => v === 0 ? '—' : 'R$' + (v/1000000).toFixed(1) + 'Mi';
+  const MAX_VAL = PILARES[0].val;
+
+  function buildBars() {
+    const chart  = document.getElementById('home-bars');
+    const labels = document.getElementById('home-labels');
+    const MAX_H  = 200; // px — matches .vchart height
+    PILARES.forEach(p => {
+      const h = p.val > 0 ? Math.max(4, Math.round((p.val / MAX_VAL) * MAX_H)) : 3;
+      // column
+      const col = document.createElement('div');
+      col.className = 'vcol';
+      col.onclick = () => go(p.id);
+      col.innerHTML = `
+        <div class="vval">${fmt(p.val)}</div>
+        <div class="vbar" data-h="${h}" style="background:${COLORS[p.status]}"></div>`;
+      chart.appendChild(col);
+      // label below
+      const lbl = document.createElement('div');
+      lbl.className = 'vlabel';
+      lbl.textContent = p.name;
+      labels.appendChild(lbl);
+    });
+  }
+
+  function buildCards() {
+    const grid = document.getElementById('pilares-grid');
+    PILARES.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'pilar-card c-' + p.status;
+      const badge = p.status === 'ok' ? '<span class="pc-badge badge-ok">Mapeado</span>'
+                  : p.status === 'par' ? '<span class="pc-badge badge-par">Parcial</span>'
+                  : '<span class="pc-badge badge-pend">Pendente</span>';
+      card.innerHTML = `<div class="pc-name">${p.name}</div><div class="pc-val">${fmt(p.val)}</div>${badge}`;
+      card.onclick = () => go(p.id);
+      grid.appendChild(card);
+    });
+  }
+
+  function animateBars() {
+    document.querySelectorAll('.vbar').forEach(el => {
+      el.style.height = el.dataset.h + 'px';
+    });
+  }
+
+  buildBars();
+  buildCards();
+  requestAnimationFrame(() => requestAnimationFrame(animateBars));
+</script>
+</body>
+</html>
